@@ -16,24 +16,13 @@ Singleton {
     readonly property string killScript: Qt.resolvedUrl("../scripts/kill_app.sh").toString().replace(/^file:\/\//, "")
 
     property var pinned: [
-        { name: "Finder", icon: "Finder.png", desktop: "org.gnome.Nautilus", exec: "nautilus", appIds: ["org.gnome.Nautilus", "nautilus"] },
-        { name: "Launchpad", icon: "Apps.png", desktop: "macos-launcher", exec: "qs ipc -p " + Quickshell.env("HOME") + "/.config/quickshell/macos call launchpad toggle", appIds: ["macos-launcher", "Launcher"] },
-                { name: "Safari", icon: "Safari.png", desktop: "org.gnome.Pafari", exec: "pafari", appIds: ["org.gnome.Pafari", "pafari"] },
+        { name: "Finder", icon: "Finder.png", desktop: "org.gnome.Nautilus", exec: "nautilus", appIds: ["org.gnome.Nautilus", "nautilus", "dolphin", "org.kde.dolphin"] },
+        { name: "Launchpad", icon: "Apps.png", desktop: "macos-launcher", exec: "quickshell -p " + Quickshell.env("HOME") + "/.config/revo/quickshell/macos/shell.qml ipc call launchpad toggle", appIds: ["macos-launcher", "Launcher"] },
+        { name: "Google Chrome", icon: "google-chrome.png", desktop: "google-chrome", exec: "google-chrome-stable", appIds: ["google-chrome", "google-chrome-stable"] },
+        { name: "VS Code", icon: "code.png", desktop: "code-oss", exec: "code", appIds: ["code-oss", "code", "com.visualstudio.code"] },
+        { name: "Terminal", icon: "Terminal.png", desktop: "kitty", exec: "kitty", appIds: ["kitty", "ghostty"] },
         { name: "Telegram", icon: "Telegram.png", desktop: "org.telegram.desktop", exec: "telegram-desktop", appIds: ["org.telegram.desktop", "telegram-desktop"] },
         { name: "Steam", icon: "Steam.png", desktop: "steam", exec: "steam", appIds: ["steam", "com.valvesoftware.Steam"] },
-        { name: "Photos", icon: "Photos.png", desktop: "org.kde.gwenview", exec: "gwenview", appIds: ["org.kde.gwenview", "gwenview"] },
-        { name: "iMessage", icon: "im-message.png", desktop: "com.github.eneshecan.Whatsie", exec: "whatsie", appIds: ["com.github.eneshecan.Whatsie", "whatsie"] },
-        { name: "Calendar", icon: "Calendar.png", desktop: "org.gnome.Calendar", exec: "gnome-calendar", appIds: ["org.gnome.Calendar"] },
-        { name: "Prism Launcher", icon: "Prism Launcher.png", desktop: "org.prismlauncher.PrismLauncher", exec: "prismlauncher", appIds: ["org.prismlauncher.PrismLauncher", "prismlauncher"] },
-        { name: "Paragon", icon: "Pargon.png", desktop: "paragon-launcher", exec: "bash " + Quickshell.env("HOME") + "/.local/share/applications/paragon-launch.sh", appIds: ["paragon-launcher", "paragon_launcher"] },
-        { name: "Adobe Premiere Pro 2026", icon: "paragon.png", desktop: "adobe-premiere-pro", exec: "env __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia WINEDEBUG=-all WINE_LARGE_ADDRESS_AWARE=1 prime-run wine \"" + Quickshell.env("HOME") + "/PortProton/prefixes/DEFAULT/drive_c/Program Files/Adobe/Adobe Premiere Pro 2026/Adobe Premiere Pro.exe\"", appIds: ["adobe-premiere-pro"] },
-        { name: "After Effects", icon: "After Effects.png", desktop: "After Effects", exec: "env \"" + Quickshell.env("HOME") + "/PortProton/data/scripts/start.sh\" \"" + Quickshell.env("HOME") + "/Adobe After Effects 2022/Support Files/AfterFX.exe\"", appIds: ["afterfx.exe", "wine", "portproton"] },
-        { name: "Zen Browser", icon: "zen-browser.png", desktop: "io.github.zen_browser.zen", exec: "zen-browser", appIds: ["io.github.zen_browser.zen", "zen", "zen-alpha"] },
-{ name: "Vesktop", icon: "discord.png", desktop: "dev.vencord.Vesktop", exec: "vesktop --enable-features=UseOzonePlatform,WebRTCPipeWireCapturer --ozone-platform=wayland --disable-features=WebRtcAllowUnifiedPlanSeamlessUpgrade,GpuRasterization --disable-gpu-memory-buffer-video-frames --disable-gpu-compositing", appIds: ["dev.vencord.Vesktop", "vesktop"] },
-        { name: "Sung", icon: "spotify-client.png", desktop: "sung", exec: "~/.local/bin/sung", appIds: ["sung"] },
-        { name: "VS Code", icon: "code.png", desktop: "code-oss", exec: "code", appIds: ["code-oss", "code", "com.visualstudio.code"] },
-        { name: "Terminal", icon: "Terminal.png", desktop: "kitty", exec: "kitty", appIds: ["kitty"] },
-        { name: "App Store", icon: "App Store.png", desktop: "pearos-appstore", exec: "pearos-appstore", appIds: ["pearos-appstore"] },
         { name: "System Settings", icon: "System Settings.png", desktop: "systemsettings", exec: "systemsettings", appIds: ["systemsettings", "macos-settings", "pearos-settings", "pearos-settings-app"] },
     ]
 
@@ -247,6 +236,42 @@ Singleton {
                 }
             }
         }
+
+        // Count active notifications from Notifications.list
+        const notifs = (typeof Notifications !== "undefined" && Notifications.list) ? Notifications.list : [];
+        for (let i = 0; i < notifs.length; ++i) {
+            const n = notifs[i];
+            const appName = (n.appName || "").toLowerCase();
+            const desktopEntry = (n.desktopEntry || "").toLowerCase();
+            if (!appName && !desktopEntry) continue;
+
+            let matchedId = null;
+            for (const p of root.pinned) {
+                const pName = p.name.toLowerCase();
+                const exec = (p.exec || "").toLowerCase();
+                const desktop = (p.desktop || "").toLowerCase();
+                if ((appName && (appName.includes(pName) || pName.includes(appName) || appName.includes(exec) || exec.includes(appName))) ||
+                    (desktopEntry && (desktopEntry.includes(pName) || pName.includes(desktopEntry) || desktopEntry.includes(desktop) || desktop.includes(desktopEntry)))) {
+                    matchedId = p.appIds[0];
+                    break;
+                }
+            }
+            if (!matchedId) {
+                for (const r of root.runningApps) {
+                    const rName = r.name.toLowerCase();
+                    const rExec = (r.exec || "").toLowerCase();
+                    if ((appName && (appName.includes(rName) || rName.includes(appName) || appName.includes(rExec) || rExec.includes(appName))) ||
+                        (desktopEntry && (desktopEntry.includes(rName) || rName.includes(desktopEntry)))) {
+                        matchedId = r.appIds[0];
+                        break;
+                    }
+                }
+            }
+            if (matchedId) {
+                newBadges[matchedId] = (newBadges[matchedId] || 0) + 1;
+            }
+        }
+
         root.badgeCounts = newBadges;
     }
 
@@ -613,32 +638,10 @@ Singleton {
     Connections {
         target: Notifications
         function onNotify(n) {
-            var appName = (n.appName || "").toLowerCase();
-            if (appName.length === 0) return;
-
-            // Check pinned apps
-            for (const p of root.pinned) {
-                var pName = p.name.toLowerCase();
-                var exec = (p.exec || "").toLowerCase();
-                var desktop = (p.desktop || "").toLowerCase();
-                if (appName.includes(pName) || pName.includes(appName) ||
-                    appName.includes(exec) || exec.includes(appName) ||
-                    appName.includes(desktop) || desktop.includes(appName)) {
-                    root.incrementBadge(p.appIds[0]);
-                    return;
-                }
-            }
-
-            // Check running (non-pinned) apps
-            for (const r of root.runningApps) {
-                var rName = r.name.toLowerCase();
-                var rExec = (r.exec || "").toLowerCase();
-                if (appName.includes(rName) || rName.includes(appName) ||
-                    appName.includes(rExec) || rExec.includes(appName)) {
-                    root.incrementBadge(r.appIds[0]);
-                    return;
-                }
-            }
+            root._scanBadges();
+        }
+        function onDiscard(id) {
+            root._scanBadges();
         }
     }
 

@@ -1197,7 +1197,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         text: {
                             var count = DockApps.badgeFor(slot.app.appIds[0]);
-                            return count > 0 ? count.toString() : "";
+                            return count > 99 ? "99+" : (count > 0 ? count.toString() : "");
                         }
                         color: "#ffffff"
                         font { family: Appearance.fontFamily; pixelSize: 11; weight: Font.Bold }
