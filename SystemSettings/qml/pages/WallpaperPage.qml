@@ -58,6 +58,7 @@ Column {
 
         var out = []
         var seen = {}
+        var seenSig = {}
         for (var i = 0; i < roots.length; i++) {
             var r = roots[i]
             if (!r || seen[r])
@@ -66,6 +67,10 @@ Column {
             var files = Shell.listFiles(r, "")
             if (files.length > 0) {
                 var folderName = r.split("/").filter(Boolean).pop() || r
+                var sig = files.length > 0 ? (files[0].split("/").pop() + ":" + files.length) : folderName
+                if (seenSig[sig])
+                    continue
+                seenSig[sig] = true
                 out.push({ name: folderName, dir: r, count: files.length })
             }
         }
@@ -161,6 +166,15 @@ Column {
             if (!seenDirs[wkDir]) {
                 var wkImgs = Shell.listImages(wkDir)
                 if (wkImgs.length > 0) {
+                    var isDup = false
+                    for (var d = 0; d < s.length; d++) {
+                        if (s[d].files.length === wkImgs.length && s[d].files.length > 0 && s[d].files[0].name === wkImgs[0].name) {
+                            isDup = true
+                            break
+                        }
+                    }
+                    if (isDup)
+                        continue
                     seenDirs[wkDir] = true
                     var wkName = wkDir.split("/").filter(Boolean).pop() || wkDir
                     s.push({
