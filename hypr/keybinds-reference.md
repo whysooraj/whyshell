@@ -1,28 +1,28 @@
-# Keybinds — imperative-dots (مرجع للقراءة)
-# هذا الملف للعرض فقط، الـ keybinds الفعلية في keybindings.conf
+# Keybinds Reference (imperative-dots)
+# This file is for reference only; actual keybinds are configured in keybinds.lua / keybindings.conf
 
 ## Window Management
-| Keybind | الوظيفة |
-|---------|---------|
-| ALT + F4 | إغلاق النافذة النشطة |
-| Super + Shift + F | تعويم/إلغاء تعويم النافذة |
-| Super + Shift + ←/→/↑/↓ | تغيير حجم النافذة |
-| Super + Ctrl + ←/→/↑/↓ | نقل النافذة في الـ layout |
-| Super + ←/→/↑/↓ | نقل التركيز بين النوافذ |
-| Super + TAB | الانتقال للشاشة التالية (multi-monitor) |
+| Keybind | Action |
+|---------|--------|
+| ALT + F4 | Close active window |
+| Super + Shift + F | Toggle floating window |
+| Super + Shift + Arrow keys | Resize active window |
+| Super + Ctrl + Arrow keys | Move window in layout |
+| Super + Arrow keys | Move focus between windows |
+| Super + TAB | Switch to next monitor |
 
 ## Applications
-| Keybind | الوظيفة |
-|---------|---------|
-| Super + Enter | فتح الـ terminal (kitty) |
-| Super + F | فتح Firefox |
-| Super + E | فتح Nautilus (File Manager) |
+| Keybind | Action |
+|---------|--------|
+| Super + Enter | Open terminal (kitty) |
+| Super + F | Open Firefox |
+| Super + E | Open file manager |
 
 ## Quickshell Panels
-| Keybind | الوظيفة |
-|---------|---------|
+| Keybind | Action |
+|---------|--------|
 | Super + D | App Launcher |
-| Super + P | **Movies Widget** (عارض الأفلام) |
+| Super + P | Movies Widget |
 | Super + C | Clipboard Manager |
 | Super + Q | Music Player |
 | Super + B | Battery Info |
@@ -33,54 +33,50 @@
 | Super + H | Guide/Help |
 | Super + Shift + S | Settings |
 | Super + Shift + T | Focus Time |
-| Super + R | إعادة تحميل الـ shell |
+| Super + R | Reload shell |
 
 ## System
-| Keybind | الوظيفة |
-|---------|---------|
-| Super + L | قفل الشاشة |
-| XF86PowerOff | قفل الشاشة |
-| Print | Screenshot (منطقة) |
-| Shift + Print | Screenshot + فتح في محرر |
-| Super + Print | Screenshot كاملة |
-| Super + Shift + Print | Screenshot كاملة + محرر |
-| XF86MonBrightnessUp/Down | التحكم في السطوع |
-| CapsLock | OSD للـ CapsLock |
+| Keybind | Action |
+|---------|--------|
+| Super + L | Lock screen |
+| XF86PowerOff | Lock screen |
+| Print | Area screenshot |
+| Shift + Print | Area screenshot and open in editor |
+| Super + Print | Fullscreen screenshot |
+| Super + Shift + Print | Fullscreen screenshot and editor |
+| XF86MonBrightnessUp/Down | Brightness control |
+| CapsLock | CapsLock OSD |
 
 ## Media
-| Keybind | الوظيفة |
-|---------|---------|
-| Super + Space | تشغيل/إيقاف مؤقت |
-| XF86AudioPlay/Pause | تشغيل/إيقاف مؤقت |
-| XF86AudioMicMute | كتم الميكروفون |
-| XF86AudioMute | كتم الصوت |
-| XF86AudioLower/RaiseVolume | التحكم في الصوت |
+| Keybind | Action |
+|---------|--------|
+| Super + Space | Play / Pause |
+| XF86AudioPlay/Pause | Play / Pause |
+| XF86AudioMicMute | Mute microphone |
+| XF86AudioMute | Mute volume |
+| XF86AudioLower/RaiseVolume | Volume control |
 
 ## Workspaces
-| Keybind | الوظيفة |
-|---------|---------|
-| Super + 1-9, 0 | الانتقال لـ workspace رقم 1-10 |
-| Super + Shift + 1-9, 0 | نقل النافذة لـ workspace رقم 1-10 |
+| Keybind | Action |
+|---------|--------|
+| Super + 1-9, 0 | Switch to workspace 1-10 |
+| Super + Shift + 1-9, 0 | Move active window to workspace 1-10 |
 
-## Mouse
-| Keybind | الوظيفة |
-|---------|---------|
-| Super + Mouse Left | سحب النافذة |
-| Super + Mouse Right | تغيير حجم النافذة |
-| 3-finger swipe horizontal | التنقل بين الـ workspaces |
+## Mouse & Touchpad
+| Keybind | Action |
+|---------|--------|
+| Super + Left Mouse | Move window |
+| Super + Right Mouse | Resize window |
+| 3-finger swipe horizontal | Switch workspaces |
 
 ---
-## ملاحظة عن Movies Widget (Super + P)
-يفتح MovieWidget.qml — واجهة Quickshell لتتبع الأفلام/المسلسلات.
-يتصل بـ TMDB API (مبني في Config.qml).
-يدعم: بحث، تقييم، watchlist، تاريخ المشاهدة.
+## Notes on Movies Widget (Super + P)
+Opens MovieWidget.qml: Quickshell UI for movie and TV tracking via TMDB API.
+Supports search, ratings, watchlist, and viewing history.
 
-## ملاحظة عن Stewart
-Stewart هو الـ mascot الـ animated في الـ dots.
-يظهر في الـ TopBar أو كـ floating element.
-يستخدم color temperature animation مع matugen palette.
-لا يوجد keybind له — يشتغل تلقائياً.
+## Notes on Stewart
+Stewart is the animated desktop mascot included in these dots.
+Appears in TopBar or as a floating element using dynamic color temperature palettes.
 
-## ملاحظة عن Serpantinum
-Serpantinum ليس جزءاً من هذه الـ dots.
-هو tool خارجي منفصل — إذا تبيه يتكامل، أضف exec له في autostart.conf.
+## Notes on Serpantinum
+Serpantinum is an external tool. If needed, configure it in autostart.

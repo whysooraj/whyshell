@@ -3,26 +3,27 @@ local fileManager = "thunar"
 local menu = "wofi --show drun"
 local clipboard = "cliphist list"
 local shiftMod = "SHIFT"
-local wallpapers = "bash ~/.config/hypr/scripts/wallpapers/wallpaper-matugen.sh"
+local wallpapers = "bash /home/whysooraj/.config/revo/hypr/scripts/wallpapers/wallpaper-matugen.sh"
 local mainMod = "SUPER"
 
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("bash -c 'echo applauncher > ${XDG_RUNTIME_DIR}/skwd/cmd'"))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell -p /home/whysooraj/.config/revo/quickshell/macos/shell.qml ipc call launchpad toggle"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("nautilus"))
-hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/quickshell/toggle_wallpaper_browser.sh"))
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/macos_lock.sh"))
-hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/rofi_show.sh drun"))
-hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/qs_manager.sh toggle music"))
-hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/ryoku_settings.sh"))
-hl.bind("ALT + TAB", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/rofi_show.sh window"))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/wallpapers/wallpaper-matugen.sh"))
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/quickshell/toggle_wallpaper_engine_browser.sh"))
-hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/quickshell/toggle_dots_browser.sh"))
+hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/quickshell/toggle_wallpaper_browser.sh"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/macos_lock.sh"))
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("quickshell -p /home/whysooraj/.config/revo/quickshell/macos/shell.qml ipc call launchpad toggle"))
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("quickshell -p /home/whysooraj/.config/revo/quickshell/macos/shell.qml ipc call spotlight toggle"))
+hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/qs_manager.sh toggle music"))
+hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/ryoku_settings.sh"))
+hl.bind("ALT + TAB", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/rofi_show.sh window"))
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/wallpapers/wallpaper-matugen.sh"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/quickshell/toggle_wallpaper_engine_browser.sh"))
+hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/quickshell/toggle_dots_browser.sh"))
 
 hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exit())
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("/usr/bin/python3 " .. (os.getenv("HOME") or "") .. "/.config/hypr/scripts/minimize_window.py min"))
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("/usr/bin/python3 " .. (os.getenv("HOME") or "") .. "/.config/hypr/scripts/minimize_window.py restore"))
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("/usr/bin/python3 " .. (os.getenv("HOME") or "") .. "/.config/revo/hypr/scripts/minimize_window.py min"))
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("/usr/bin/python3 " .. (os.getenv("HOME") or "") .. "/.config/revo/hypr/scripts/minimize_window.py restore"))
 hl.bind(mainMod .. " + F", hl.dsp.window.float({ action = "toggle" }))
 
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))
@@ -77,24 +78,24 @@ hl.bind(mainMod .. " + minus", hl.dsp.exec_cmd("hyprshot -m window"))
 hl.bind("PRINT", hl.dsp.exec_cmd("hyprshot -m output"))
 hl.bind(shiftMod .. " + K", hl.dsp.exec_cmd("hyprshot -m region"))
 
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/show_desktop.sh"))
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/show_desktop.sh"))
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd("zen-browser"))
 hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set +5%"))
 hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-"))
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("bash -c 'echo powermenu > ${XDG_RUNTIME_DIR}/skwd/cmd'"))
--- hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/toggle_waffle.sh"))
+-- hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/toggle_waffle.sh"))
 hl.bind(mainMod .. " + N", hl.dsp.global("quickshell:wallpaperSelectorToggle"))
-hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/qs_manager.sh toggle settings"))
-hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("~/.config/hypr/scripts/qs_manager.sh toggle movies"))
-hl.bind(mainMod .. " + J", hl.dsp.exec_cmd("~/.config/hypr/scripts/qs_manager.sh toggle anime"))
-hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/qs_manager.sh toggle focustime"))
-hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("quickshell -p ~/.config/quickshell/TypewriterSplash.qml"))
-hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("qs ipc call shell toggle spotlight"))
+hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/qs_manager.sh toggle settings"))
+hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("/home/whysooraj/.config/revo/hypr/scripts/qs_manager.sh toggle movies"))
+hl.bind(mainMod .. " + J", hl.dsp.exec_cmd("/home/whysooraj/.config/revo/hypr/scripts/qs_manager.sh toggle anime"))
+hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/qs_manager.sh toggle focustime"))
+hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("quickshell -p /home/whysooraj/.config/revo/quickshell/TypewriterSplash.qml"))
+hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("quickshell -p /home/whysooraj/.config/revo/quickshell/macos/shell.qml ipc call spotlight toggle"))
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("~/.local/bin/steam-gamescope"))
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/quickshell/toggle_screenshot_browser.sh"))
--- hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/toggle_macos.sh"))
-hl.bind("XF86PowerOff", hl.dsp.exec_cmd("bash ~/.config/hypr/scripts/macos_lock.sh"), { locked = true })
--- زر للتبديل السريع بين الـ 2D التقليدي وعالم الـ 3D الحر
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/quickshell/toggle_screenshot_browser.sh"))
+-- hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/toggle_macos.sh"))
+hl.bind("XF86PowerOff", hl.dsp.exec_cmd("bash /home/whysooraj/.config/revo/hypr/scripts/macos_lock.sh"), { locked = true })
+-- Toggle Hypr3D between 2D and 3D mode
 hl.bind(mainMod .. " + BackSpace", hl.dsp.exec_cmd("hyprctl hypr3d"))
 if hl.plugin and hl.plugin.hypr3d and hl.plugin.hypr3d.toggle then
     

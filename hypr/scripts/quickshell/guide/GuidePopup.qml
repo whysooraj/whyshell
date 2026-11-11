@@ -8,7 +8,7 @@ Shell {
         
         anchors.fill: parent
 
-        // استدعاء المكون المحلي مباشرة بدون تعقيد مسارات
+        // Import local component directly
         GuidePopup {
             anchors.fill: parent
         }

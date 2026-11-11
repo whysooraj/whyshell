@@ -3,8 +3,8 @@
 #  toggle_qs_dots.sh — Switch Quickshell Dots via Rofi / Cycle
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-QS_BASE="$HOME/.config/quickshell"
-HYPR_QS="$HOME/.config/hypr/scripts/quickshell"
+QS_BASE="/home/whysooraj/.config/revo/quickshell"
+HYPR_QS="/home/whysooraj/.config/revo/hypr/scripts/quickshell"
 
 # ─── 1. Detect Currently Active Dot ───────────────────────
 get_active_dot() {
@@ -86,7 +86,7 @@ start_dot() {
             elif [[ -d "$QS_BASE/$target/api" ]]; then
                 env_prefix="QML2_IMPORT_PATH=$QS_BASE/$target/api "
             fi
-            setsid -f bash -c "${env_prefix}quickshell -p $QS_BASE/$target/shell.qml" >"$HOME/${target}.log" 2>&1
+            setsid -f bash -c "export WAYLAND_DISPLAY=\"\${WAYLAND_DISPLAY:-wayland-1}\" QT_QPA_PLATFORM=wayland; ${env_prefix}quickshell -p $QS_BASE/$target/shell.qml" >"$HOME/${target}.log" 2>&1
         fi
     fi
 }
@@ -139,14 +139,14 @@ show_rofi_menu() {
             default) label="default  │ ⚙️ Default (System Shell)" ;;
             macos)   label="macos    │ 🍎 macOS" ;;
             ii)      label="ii       │ 🪟 ii (Windows 11 Waffle)" ;;
-            k4)      label="k4       │ 🏝️ k4 (Dynamic Island الكاملة)" ;;
+            k4)      label="k4       │ 🏝️ k4 (Full Dynamic Island)" ;;
             shell)   label="shell    │ 🌌 Caelestia Shell" ;;
             ryoku)   label="ryoku    │ 🎴 Ryoku Shell (力と美)" ;;
             *)       label="$dot    │ 🎨 $dot" ;;
         esac
 
         if [[ "$dot" == "$active" ]]; then
-            options+="$label  ✔ [نشط]\n"
+            options+="$label  ✔ [Active]\n"
         else
             options+="$label\n"
         fi
@@ -156,7 +156,7 @@ show_rofi_menu() {
     local selected
     selected=$(echo -e "$options" | rofi -dmenu \
         -p "Quickshell Dots" \
-        -config "$HOME/.config/rofi/config.rasi" \
+        -config "/home/whysooraj/.config/revo/rofi/config.rasi" \
         -theme-str 'listview { columns: 1; lines: 8; spacing: 4px; }' \
         -theme-str 'element { orientation: horizontal; padding: 8px 12px; }' \
         -theme-str 'element-text { enabled: true; vertical-align: 0.5; font: "Inter DemiBold 12"; }' \

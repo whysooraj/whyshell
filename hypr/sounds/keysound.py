@@ -21,7 +21,7 @@ if not keyboard:
 if not keyboard:
     exit(1)
 
-sound_dir = os.path.expanduser("~/.config/hypr/sounds/")
+sound_dir = os.path.expanduser("/home/whysooraj/.config/revo/hypr/sounds/")
 
 ignored_keys = {
     evdev.ecodes.KEY_LEFTSHIFT, evdev.ecodes.KEY_RIGHTSHIFT,
@@ -43,7 +43,7 @@ def play_sound(sound_file):
     current_player = subprocess.Popen(["mpv", "--no-video", "--really-quiet", sound_dir + sound_file])
 
 for event in keyboard.read_loop():
-    # 1 تعني الضغط، و 2 تعني الاستمرار بالضغط (Hold / Repeat)
+    # 1: Press, 2: Hold / Repeat
     if event.type == evdev.ecodes.EV_KEY and event.value in (1, 2):
         if event.code == evdev.ecodes.KEY_BACKSPACE or event.code == evdev.ecodes.KEY_DELETE:
             play_sound("remove.ogg")

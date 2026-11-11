@@ -1,19 +1,19 @@
 #!/bin/bash
 
-SCRIPTS="$HOME/.config/hypr/scripts"
+SCRIPTS="/home/whysooraj/.config/revo/hypr/scripts"
 QS_DIR="$SCRIPTS/quickshell"
 MATUGEN_RELOAD="$QS_DIR/wallpaper/matugen_reload.sh"
 MAIN_QML="$QS_DIR/Main.qml"
 TOPBAR_QML="$QS_DIR/TopBar.qml"
 
-# ─── 1. شغّل random.sh (يغيّر الخلفية + pywal) ─────
-bash "$HOME/.config/hypr/scripts/wallpapers/random.sh"
+# ─── 1. Run random.sh (change wallpaper + pywal) ─────
+bash "/home/whysooraj/.config/revo/hypr/scripts/wallpapers/random.sh"
 
-# ─── 2. جيب آخر خلفية استخدمها wal ─────────────────
+# ─── 2. Get last wallpaper used by wal ─────────────────
 WALLPAPER=$(cat ~/.cache/wal/wal 2>/dev/null)
 [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ] && exit 1
 
-# ─── 3. matugen من نفس الخلفية ──────────────────────
+# ─── 3. Generate matugen colors from wallpaper ─────────
 matugen image "$WALLPAPER" --source-color-index 0
 
 # ─── 4. reload ──────────────────────────────────────
@@ -21,7 +21,7 @@ matugen image "$WALLPAPER" --source-color-index 0
 
 sleep 0.5
 
-# ─── 5. أعد تشغيل quickshell ────────────────────────
+# ─── 5. Restart quickshell ────────────────────────────
 kill $(pgrep -f "Main.qml") 2>/dev/null || true
 kill $(pgrep -f "TopBar.qml") 2>/dev/null || true
 

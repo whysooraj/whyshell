@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-MY_QML_DIR="$HOME/.config/hypr/scripts/quickshell"
-WAFFLE_DIR="$HOME/.config/quickshell/ii"
+MY_QML_DIR="/home/whysooraj/.config/revo/hypr/scripts/quickshell"
+WAFFLE_DIR="/home/whysooraj/.config/revo/quickshell/ii"
 
 waffle_running() {
     pgrep -f "qs -p .*quickshell/ii" >/dev/null 2>&1 || pgrep -f "quickshell.*-p .*quickshell/ii" >/dev/null 2>&1
@@ -37,15 +37,15 @@ stop_waffle() {
 if waffle_running; then
     stop_waffle
     start_my_shell
-    notify-send -a Waffle "Windows look OFF" "رجع لشكل النظام العادي"
+    notify-send -a Waffle "Windows look OFF" "Restored default shell"
 else
     stop_my_shell
     qs -p "$WAFFLE_DIR" >/tmp/waffle.log 2>&1 &
     sleep 2
     if waffle_running; then
-        notify-send -a Waffle "Windows look ON" "Waffle (شكل ويندوز 11)"
+        notify-send -a Waffle "Windows look ON" "Waffle (Windows 11 look)"
     else
-        notify-send -a Waffle "Waffle failed" "راجع /tmp/waffle.log — تم إرجاع شكل النظام"
+        notify-send -a Waffle "Waffle failed" "Check /tmp/waffle.log - restored default shell"
         start_my_shell
     fi
 fi

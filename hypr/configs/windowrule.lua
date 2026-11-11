@@ -95,10 +95,10 @@ hl.window_rule({
     fullscreen = false,
     pin = true,
     no_focus = true,
-    -- إعدادات إضافية لجعلها ثابتة تماماً بالخلفية بدون تأثيرات شفافة تزعجك
+    -- Additional settings to keep it completely stable in background
     suppress_event = "maximize",
 })
--- إجبار نافذة بث الآيفون على أخذ خصائص ثيم الآيفون المدمج في eqSh
+-- Uxplay iPhone screen mirroring window rules
 hl.window_rule({
     match = { class = "^(uxplay)$" },
     float = true,
@@ -110,3 +110,12 @@ hl.window_rule({
     rounding = 20
 })
 
+
+-- macOS layer blur rules
+for _, ns in ipairs({ "eqsh:spotlight", "eqsh:blur", "eqsh:ddm-blur", "macos:topbar", "macos:dock", "macos:launchpad", "quickshell" }) do
+    hl.layer_rule({
+        match = { namespace = "^" .. ns .. "$" },
+        blur = true,
+        ignore_alpha = 0.1,
+    })
+end

@@ -10,7 +10,7 @@ import "../common"
 PanelWindow {
         id: root
 
-    // ── 1. الخصائص العادية والمخصصة (يجب أن تكون في البداية معاً) ──
+    // ── 1. Properties ──
     screen: Quickshell.screens[0]
     anchors {
         bottom: !root.dockVertical
@@ -21,9 +21,10 @@ PanelWindow {
 
     height: root.dockVertical ? root.capsuleWidth : root.winThick
     width: root.winThick
+    exclusiveZone: Appearance.dockAutohide ? 0 : (root.capsuleHeight + 10)
     property bool isTrashFull: false
 
-    // ── 2. العناصر المستقلة (تأتي بعد الخصائص مباشرة) ──
+    // ── 2. Independent Elements ──
     Process {
         id: trashChecker
         command: ["sh", "-c", "ls -A ~/.local/share/Trash/files"]
@@ -87,9 +88,9 @@ PanelWindow {
         return "file-doc.svg";
     }
 
-    // ── هندسة قائمة الـDownloads: عمود مستقيم فوق أيقونة الدوك مع تمرير ──
-    // ملاحظة: pos بإحداثيات نافذة الدوك (النافذة نفسها أسفل الشاشة)،
-    // و anchor.rect يُRelativeTo نفس النافذة، فالقائمة تمتد للأساسب (y سالب).
+    // ── Downloads Stack Menu Layout ──
+    // Note: pos is relative to dock window coordinates
+    // and anchor.rect is relative to same window.
     function layoutDownloads() {
         const screen = Quickshell.screens[0];
         const pos = root.dockVertical
@@ -97,10 +98,10 @@ PanelWindow {
             : dlSlot.mapToItem(null, dlSlot.width / 2, 14);
         const n = Math.max(1, root.fanModel.length);
         const w = 400;
-        const headH = 72;   // زر Open in Finder (12 + 46 + 14)
+        const headH = 72;   // Open in Finder button (12 + 46 + 14)
         const padB = 14;
         const listNeed = n * root.fanRowH;
-        const visibleRows = 7;   // سبعة ملفات فقط ظاهرة (والباقي بالتمرير)
+        const visibleRows = 7;   // 7 visible items before scrolling
         const maxH = Math.min(screen.height - 12, headH + visibleRows * root.fanRowH + padB);
         const h = Math.min(headH + listNeed + padB, maxH);
         let x, y;
@@ -109,7 +110,7 @@ PanelWindow {
             x = root.dockLeft ? root.width + 8 : -w - 8;
             y = Math.max(6 - side, Math.min(root.height + side - h - 6, Math.round(pos.y - h / 2)));
         } else {
-            const winTop = screen.height - root.height - 12;   // أعلى النافذة على الشاشة
+            const winTop = screen.height - root.height - 12;   // Top of dock window on screen
             x = Math.max(6, Math.min(screen.width - w - 6, Math.round(pos.x - w / 2)));
             y = Math.max(6 - winTop, Math.round(pos.y + 6 - h));
         }
@@ -121,7 +122,7 @@ PanelWindow {
         return { n: n, w: w, h: h, x: x, y: y };
     }
 
-    // ميلان القائمة: أعلى العرض لليمين وأسفله لليسار (زي فن الستاك بالماك)
+    // Stack fan curve skew
     function fanRowX(yInView) {
         return -yInView * 0.25;
     }
@@ -221,7 +222,7 @@ PanelWindow {
                     const i = line.indexOf("|");
                     if (i > 0) out.push(line.slice(i + 1));
                 }
-                // ما نعيد الإنشاء إذا المحتوى ما تغيّر (حتى ما ينحفظ الانميشن)
+                // Avoid recreating if content unchanged
                 const cur = root.dlItems;
                 let same = cur.length === out.length;
                 if (same) {
@@ -302,7 +303,7 @@ PanelWindow {
     }
 
 
-    // ── الألوان وتصميم الزجاج ──
+    // ── Colors & Glass styling ──
     readonly property color glassBorder: Qt.rgba(255, 255, 255, 0.25)
     readonly property color glassHighlight: Qt.rgba(255, 255, 255, 0.45)
     readonly property color selectionBg: Qt.rgba(255, 255, 255, 0.22)
@@ -435,13 +436,13 @@ PanelWindow {
         }
     }
 
-    // ── مكون الزجاج المعدل ليتناسب مع Quickshell ──
+    // ── Glass component for Quickshell ──
     component ShaderLiquidGlass: Item {
         id: glass
 
         property real radius: 26
         property real roundness: 7.5
-        property color tint: "#1e1e24" // لون داكن شفاف افتراضي متناسق
+        property color tint: "#1e1e24" // Default dark translucent tint
         property real tintAlpha: 0.65
         property bool solidMode: false
         // true => follow the Appearance "Liquid Glass" setting (Clear / Tinted + intensity)
@@ -658,7 +659,7 @@ PanelWindow {
                 NumberAnimation { duration: root.downloadsOpen ? 260 : 420; easing.type: Easing.OutCubic }
             }
 
-            // ── زر Open in Finder الدائري (سهم داخل مربع) ──
+            // ── Open in Finder button ──
             Rectangle {
                 id: fanFinderBtn
                 anchors.top: parent.top
@@ -767,7 +768,7 @@ PanelWindow {
                             height: root.fanRowH
                             x: root.fanRowX(fanItem.y - fanFlick.contentY)
 
-                            // ── انميشن الظهور: يطلع من الدوك بالتتابع (الأسفل أولاً) ──
+                            // ── Staggered entrance animation ──
                             property real appearT: root.downloadsOpen ? 1 : 0
                             opacity: Math.min(1, fanItem.appearT * 2.5)
                             transform: [
@@ -925,7 +926,7 @@ PanelWindow {
                 radius: 0.5
             }
 
-            // نافذة مصغّرة بالجيني: مصغّرة آخر حالة مرئية + شارة التطبيق
+            // Genie minimized window thumbnail + app badge
             component MinSlot: Item {
                 required property var modelData
                 Layout.preferredWidth: root.dockVertical ? parent.width : root.slotWidth + root.minSlotExtra
@@ -1462,7 +1463,7 @@ PanelWindow {
 
             DockSeparator {}
 
-                        // ── فولدر الداون لودس (ستاك ماك) ──
+                        // ── Downloads stack folder ──
             Item {
                 id: dlSlot
                 Layout.preferredWidth: root.dockVertical ? parent.width : root.slotWidth
@@ -1513,18 +1514,18 @@ PanelWindow {
                 }
             }
 
-            // ── النوافذ المصغّرة بالجيني (مصغّرة مستطيلة جنب فولدر الداون لودس) ──
+            // ── Minimized window thumbnails ──
             Repeater {
                 model: DockApps.minimizedItems
                 delegate: MinSlot {}
             }
 
-            // ── عناصر السكرين شوت (أيقونة التطبيق + شارة) ──
+            // ── Screenshot previews ──
             Repeater {
                 model: root.shotItems
                 delegate: ShotSlot {}
             }
-                        // ── كود سلة المهملات المطوّر ──
+                        // ── Trash bin item ──
             Item {
                 id: trashSlot
                 Layout.preferredWidth: root.dockVertical ? parent.width : root.slotWidth
@@ -1578,7 +1579,7 @@ PanelWindow {
                         if (!trashOpener.running) trashOpener.running = true;
                     }
                 }
-            } // إغلاق حاوية الـ Item لسلة المهملات
-        } // إغلاق الـ RowLayout (dockRow)
-    } // إغلاق الـ Item الأساسي (capsule)
-} // إغلاق الحاوية الكلية للملف (PanelWindow)
+            } // End trash Item
+        } // End dockRow
+    } // End capsule
+} // End PanelWindow

@@ -1,13 +1,13 @@
 import QtQuick
 import Quickshell
-import "./guide" // تحديد المسار النسبي المباشر من نفس المجلد
+import "./guide" // Relative path import
 
 Shell {
     PanelWindow {
         active: true
         wantsFocus: true
         
-        // الطريقة الصحيحة لملء الشاشة في Quickshell
+        // Fullscreen configuration in Quickshell
         anchors {
             top: true
             bottom: true

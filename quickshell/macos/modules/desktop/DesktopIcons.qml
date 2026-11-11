@@ -9,32 +9,32 @@ Scope {
     PanelWindow {
         id: desktopWindow
         
-        // ربط الشاشة باسمها الفعلي مباشرة بطريقة Quickshell الصحيحة
+        // Bind screen directly to eDP-1
         screen: Quickshell.screens.find(function(s) { return s.name === "eDP-1"; })
         
         anchors.fill: parent
         
-        // إعدادات الطبقة لضمان البقاء في الخلفية بشكل مستقر تماماً
+        // Layer settings for stable background presence
         WlrLayershell.exclusionMode: WlrLayershell.ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayershell.Layer.Background
         WlrLayershell.namespace: "desktop_icons"
         
-        color: "transparent" // شفافة لكي تظهر خلفية جهازك الأساسية
+        color: "transparent" // Transparent to show wallpaper
 
         GridView {
             id: grid
             anchors.fill: parent
-            anchors.topMargin: 80     // مسافة كافية لكي لا تتداخل الأيقونات مع الـ TopBar في الأعلى
-            anchors.bottomMargin: 120  // مسافة كافية لكي لا تتداخل مع الـ Dock في الأسفل
+            anchors.topMargin: 80     // Avoid TopBar overlap
+            anchors.bottomMargin: 120  // Avoid Dock overlap
             anchors.leftMargin: 50
             anchors.rightMargin: 50
             cellWidth: 120
             cellHeight: 120
-            flow: GridView.FlowTopToBottom // ترتيب المجلدات عمودياً كالمعتاد
+            flow: GridView.FlowTopToBottom // Vertical column layout
 
             model: FolderListModel {
                 id: folderModel
-                // مسار صريح ومباشر لمجلد سطح المكتب الخاص بك لتجنب مشاكل القراءة
+                // Direct desktop folder path
                 folder: "file://" + Quickshell.env("HOME") + "/Desktop"
                 showDotAndDotDot: false
             }
@@ -47,17 +47,17 @@ Scope {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    // تصميم مربع الأيقونة (مجلد أو ملف)
+                    // Icon placeholder
                     Rectangle {
                         Layout.alignment: Qt.AlignHCenter
                         width: 55
                         height: 55
-                        color: fileIsDir ? "#4c566a" : "#81a1c1" // ألوان مؤقتة متناسقة مع مظهر النظام
+                        color: fileIsDir ? "#4c566a" : "#81a1c1"
                         radius: 10
                         opacity: 0.85
                     }
 
-                    // اسم المجلد أو الملف
+                    // File or folder name
                     Text {
                         Layout.fillWidth: true
                         text: fileName
@@ -67,13 +67,13 @@ Scope {
                         elide: Text.ElideRight
                         maximumLineCount: 2
                         wrapMode: Text.Wrap
-                        // إضافة ظل خفيف للاسم ليكون مقروءاً فوق أي خلفية
+                        // Drop shadow for legibility over any wallpaper
                         style: Text.Outline
                         styleColor: "black"
                     }
                 }
 
-                // فتح العناصر عند الضغط المزدوج
+                // Open on double click
                 MouseArea {
                     anchors.fill: parent
                     onDoubleClicked: {

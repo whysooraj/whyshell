@@ -8,5 +8,5 @@ if [[ -S "$SOCK" ]]; then
     PATH="$HOME/.local/bin:$PATH" "$BIN" hub open >/dev/null 2>&1
 else
     notify-send -a "Ryoku" -i "preferences-desktop-theme" \
-        "Ryoku غير شغّال" "فعّل ثيم Ryoku من سوبر + B الأول"
+        "Ryoku not running" "Enable Ryoku theme from Super + B first"
 fi

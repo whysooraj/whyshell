@@ -5,13 +5,13 @@ Item {
     id: root
 
     property real radius: 28
-    property color glassColor: Qt.rgba(1, 1, 1, 0.015) // خلفية شبه مخفية
-    property color strokeHighlight: Qt.rgba(1, 1, 1, 0.25) // لمعة الزجاج العلوي
-    property color strokeShadow: Qt.rgba(0, 0, 0, 0.2)     // ظل الانكسار السفلي
+    property color glassColor: Qt.rgba(1, 1, 1, 0.015) // Subtle glass background
+    property color strokeHighlight: Qt.rgba(1, 1, 1, 0.25) // Top glass highlight
+    property color strokeShadow: Qt.rgba(0, 0, 0, 0.2)     // Bottom refraction shadow
 
     default property alias content: containerLayout.children
 
-    // 1. جسم الزجاج الأساسي
+    // 1. Primary glass body
     Rectangle {
         id: glassBody
         anchors.fill: parent
@@ -19,7 +19,7 @@ Item {
         color: root.glassColor
         opacity: 0.9
 
-        // 2. محاكاة تأثير Backdrop Blur
+        // 2. Backdrop blur effect
         MultiEffect {
             anchors.fill: parent
             source: glassBody
@@ -28,7 +28,7 @@ Item {
             blurMax: 12
         }
 
-        // 3. طبقة التوهج والحدود الانكسارية (Liquid Stroke & Inset Shadows)
+        // 3. Glow and refraction border (Liquid Stroke & Inset Shadows)
         Rectangle {
             anchors.fill: parent
             radius: parent.radius
@@ -36,7 +36,7 @@ Item {
             border.width: 1
             border.color: Qt.rgba(1, 1, 1, 0.12)
 
-            // التدرج اللوني الداخلي لإعطاء انطباع الانحناء المائي 3D
+            // Inner gradient for 3D curvature
             Rectangle {
                 anchors.fill: parent
                 radius: parent.radius
@@ -51,7 +51,7 @@ Item {
             }
         }
 
-        // حاوي العناصر الداخلية
+        // Inner items container
         Item {
             id: containerLayout
             anchors.fill: parent

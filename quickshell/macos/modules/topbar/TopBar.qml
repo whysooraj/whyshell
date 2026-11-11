@@ -63,7 +63,7 @@ PanelWindow {
                 if (id === a || id.includes(a) || a.includes(id)) return it.name;
             }
         }
-        if (id.includes("afterfx.exe")) return "After Effects"; // الشرط الذكي للأفتر إفكتس
+        if (id.includes("afterfx.exe")) return "After Effects"; // After Effects match
         const seg = id.split(".").pop();
         if (!seg) return "Finder";
         return seg.charAt(0).toUpperCase() + seg.slice(1);
@@ -1267,7 +1267,7 @@ PanelWindow {
                 sourceSize: Qt.size(26, 26)
             }
 
-            // AR: ع text with white bg
+            // AR: layout text with white bg
             Rectangle {
                 anchors.centerIn: parent
                 visible: kbdItem.isAr
@@ -1819,11 +1819,11 @@ PanelWindow {
         implicitWidth: 232; implicitHeight: 370; visible: root.appleOpen; color: "transparent"
         Rectangle {
             anchors.fill: parent; radius: 12; 
-            color: Qt.rgba(0.18, 0.18, 0.22, 0.45) // خلفية شفافة
+            color: Qt.rgba(0.18, 0.18, 0.22, 0.45) // Translucent background
             border.color: Appearance.menuBorder; border.width: 1
             ColumnLayout {
                 anchors.fill: parent; anchors.margins: 5; spacing: 1
-                // ... بقية المحتوى
+                // ... Remaining content
                 component AMItem: Rectangle {
                     id: ai; property string label: ""; property string sublabel: ""; property url icon: ""; property var onClick: null
                     Layout.fillWidth: true; Layout.preferredHeight: 28; radius: 6; color: "transparent"
@@ -1855,7 +1855,7 @@ PanelWindow {
                 component ASep: Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; Layout.topMargin: 4; Layout.bottomMargin: 4; color: Qt.rgba(1, 1, 1, 0.12) }
                 AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/icon.svg"); label: "About This Mac"; onClick: () => ShellController.openAbout() }
                 ASep {}
-                AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/dropdown/settings.svg"); label: "System Settings…"; onClick: () => Apps.launch("pearos-settings") }
+                AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/dropdown/settings.svg"); label: "System Settings…"; onClick: () => ShellController.toggle("settings") }
                 AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/dropdown/store.svg"); label: "App Store…"; onClick: () => Apps.launch("pearos-appstore") }
                 ASep {}
                 AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/dropdown/clock.svg"); label: "Recent Items"; sublabel: "▶" }
@@ -1880,11 +1880,11 @@ PanelWindow {
         implicitHeight: Math.min(600, (root.menuItems(root.openMenu).length * 29) + 24)
         Rectangle {
             anchors.fill: parent; radius: 12; 
-            color: Qt.rgba(0.18, 0.18, 0.22, 0.45) // خلفية شفافة
+            color: Qt.rgba(0.18, 0.18, 0.22, 0.45) // Translucent background
             border.color: Appearance.menuBorder; border.width: 1
             ColumnLayout {
                 anchors.fill: parent; anchors.margins: 6; spacing: 1
-                // ... بقية المحتوى
+                // ... Remaining content
                 Repeater {
                     model: root.menuItems(root.openMenu)
                     delegate: Item {

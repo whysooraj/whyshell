@@ -7,7 +7,7 @@ Quickshell.Shell {
         active: true
         wantsFocus: true
         
-        // الطريقة الصحيحة في كويك شيل لجعل النافذة ملء الشاشة (Fullscreen)
+        // Fullscreen configuration in Quickshell
         anchors.top: true
         anchors.bottom: true
         anchors.left: true

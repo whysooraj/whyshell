@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-MY_QML_DIR="$HOME/.config/hypr/scripts/quickshell"
-MACOS_QML="$HOME/.config/quickshell/macos/shell.qml"
+MY_QML_DIR="/home/whysooraj/.config/revo/hypr/scripts/quickshell"
+MACOS_QML="/home/whysooraj/.config/revo/quickshell/macos/shell.qml"
 
 macos_running() {
     pgrep -f "quickshell.*-p .*quickshell/macos" >/dev/null 2>&1 || pgrep -f "quickshell.*macos/shell\.qml" >/dev/null 2>&1
@@ -40,9 +40,9 @@ start_macos() {
     fi
     sleep 2
     if macos_running; then
-        notify-send -a macOS "macOS look ON" "شكل الماك"
+        notify-send -a macOS "macOS look ON" "macOS theme active"
     else
-        notify-send -a macOS "macOS failed" "راجع $HOME/macos.log — تم إرجاع شكل النظام"
+        notify-send -a macOS "macOS failed" "Check $HOME/macos.log - restored default shell"
         start_my_shell
     fi
 }
@@ -50,7 +50,7 @@ start_macos() {
 if macos_running; then
     stop_macos
     start_my_shell
-    notify-send -a macOS "macOS OFF" "رجع لشكل النظام العادي"
+    notify-send -a macOS "macOS OFF" "Restored default shell"
 else
     stop_my_shell
     start_macos
