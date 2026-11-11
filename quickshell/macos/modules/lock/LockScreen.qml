@@ -140,7 +140,7 @@ Scope {
             id: lockWindow
 
             required property ShellScreen modelData
-            required property int index
+            readonly property bool isPrimary: (modelData === (Quickshell.screens && Quickshell.screens.length > 0 ? Quickshell.screens[0] : null))
 
             screen: modelData
             anchors {
@@ -154,7 +154,7 @@ Scope {
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.namespace: "macos:lock"
             WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: (lockWindow.visible && index === 0) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+            WlrLayershell.keyboardFocus: (lockWindow.visible && isPrimary) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
             // Wallpaper image across all monitors
             Image {
@@ -263,10 +263,10 @@ Scope {
                     }
                 }
 
-                // Interactive Auth Controls: only on primary monitor (index === 0)
+                // Interactive Auth Controls: only on primary monitor
                 Item {
                     anchors.fill: parent
-                    visible: index === 0
+                    visible: isPrimary
 
                     // User Avatar
                     Item {

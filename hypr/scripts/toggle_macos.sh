@@ -36,13 +36,13 @@ stop_macos() {
 }
 
 start_macos() {
-    systemctl --user stop swaync 2>/dev/null || true
-    pkill -x swaync 2>/dev/null || true
+    systemctl --user stop mako swaync dunst 2>/dev/null || true
+    killall -9 mako swaync dunst 2>/dev/null || true
     if ! pgrep -f "dbusmenu_bridge\.py" >/dev/null 2>&1; then
         python3 "$HOME/.config/revo/hypr/scripts/dbusmenu_bridge.py" >/dev/null 2>&1 &
     fi
     if ! pgrep -f "quickshell.*macos/shell\.qml" >/dev/null 2>&1; then
-        quickshell -p "$MACOS_QML" >"$HOME/macos.log" 2>&1 &
+        quickshell -d -p "$MACOS_QML" >"$HOME/macos.log" 2>&1
     fi
     sleep 2
     if macos_running; then
