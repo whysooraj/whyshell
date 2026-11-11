@@ -15,9 +15,11 @@ Singleton {
     readonly property string iconScript: Qt.resolvedUrl("../scripts/dock_icon.sh").toString().replace(/^file:\/\//, "")
     readonly property string killScript: Qt.resolvedUrl("../scripts/kill_app.sh").toString().replace(/^file:\/\//, "")
 
-    property var pinned: [
+    readonly property var defaultPinned: [
         { name: "Finder", icon: "Finder.png", desktop: "org.gnome.Nautilus", exec: "nautilus", appIds: ["org.gnome.Nautilus", "nautilus", "dolphin", "org.kde.dolphin"] },
         { name: "Launchpad", icon: "Apps.png", desktop: "macos-launcher", exec: "quickshell -p " + Quickshell.env("HOME") + "/.config/revo/quickshell/macos/shell.qml ipc call launchpad toggle", appIds: ["macos-launcher", "Launcher"] },
+        { name: "Helium Browser", icon: "helium-browser.png", desktop: "helium", exec: "helium-browser", appIds: ["helium-browser", "Helium-browser", "helium"] },
+        { name: "ZapFast", icon: "zapfast.png", desktop: "zapfast", exec: "zapfast", appIds: ["zapfast", "Zapfast"] },
         { name: "Google Chrome", icon: "google-chrome.png", desktop: "google-chrome", exec: "google-chrome-stable", appIds: ["google-chrome", "google-chrome-stable"] },
         { name: "VS Code", icon: "code.png", desktop: "code-oss", exec: "code", appIds: ["code-oss", "code", "com.visualstudio.code"] },
         { name: "Terminal", icon: "Terminal.png", desktop: "kitty", exec: "kitty", appIds: ["kitty", "ghostty"] },
@@ -25,6 +27,28 @@ Singleton {
         { name: "Steam", icon: "Steam.png", desktop: "steam", exec: "steam", appIds: ["steam", "com.valvesoftware.Steam"] },
         { name: "System Settings", icon: "System Settings.png", desktop: "systemsettings", exec: "systemsettings", appIds: ["systemsettings", "macos-settings", "pearos-settings", "pearos-settings-app"] },
     ]
+
+    property var pinned: {
+        const saved = Appearance.cfgGet("dockPinnedApps", null);
+        if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+        return defaultPinned;
+    }
+
+    Connections {
+        target: Appearance
+        function onUserCfgChanged() {
+            const saved = Appearance.cfgGet("dockPinnedApps", null);
+            if (saved && Array.isArray(saved) && saved.length > 0) {
+                if (JSON.stringify(root.pinned) !== JSON.stringify(saved)) {
+                    root.pinned = saved;
+                }
+            }
+        }
+    }
+
+    function savePinned() {
+        Appearance.set("dockPinnedApps", root.pinned);
+    }
 
     property bool trashEmpty: true
 
@@ -159,29 +183,40 @@ Singleton {
     }
 
     function pinApp(app) {
+        if (!app) return;
+        const targetId = (app.appIds && app.appIds.length > 0) ? app.appIds[0] : (app.name || "");
         // Check if already pinned
         for (const p of root.pinned) {
-            if (p.appIds[0] === app.appIds[0]) return;
+            if (p.appIds && (p.appIds[0] === targetId || p.appIds.includes(targetId))) return;
         }
-        root.pinned.push({
-            name: app.name,
-            icon: app.icon || app.name + ".png",
+        const iconVal = app.icon || (root._iconCache[targetId] ? root._iconCache[targetId] : (app.name + ".png"));
+        const newPinned = root.pinned.slice();
+        newPinned.push({
+            name: app.name || targetId,
+            icon: iconVal,
             desktop: app.desktop || "",
-            exec: app.exec || "",
-            appIds: app.appIds || [app.name]
+            exec: app.exec || targetId,
+            appIds: app.appIds || [targetId]
         });
-        root.pinned = root.pinned;
+        root.pinned = newPinned;
         // Remove from running apps if present
-        root.runningApps = root.runningApps.filter(r => r.appIds[0] !== app.appIds[0]);
+        root.runningApps = root.runningApps.filter(r => !r.appIds || r.appIds[0] !== targetId);
+        root.savePinned();
     }
 
     function unpinApp(app) {
-        root.pinned = root.pinned.filter(p => p.appIds[0] !== app.appIds[0]);
+        if (!app) return;
+        const targetId = (app.appIds && app.appIds.length > 0) ? app.appIds[0] : (app.name || "");
+        root.pinned = root.pinned.filter(p => {
+            if (!p.appIds || p.appIds.length === 0) return true;
+            return p.appIds[0] !== targetId && !p.appIds.includes(targetId);
+        });
+        root.savePinned();
     }
 
     function isPinned(appId) {
         for (const p of root.pinned) {
-            if (p.appIds.includes(appId)) return true;
+            if (p.appIds && p.appIds.includes(appId)) return true;
         }
         return false;
     }
@@ -190,11 +225,11 @@ Singleton {
         if (fromIndex === toIndex) return;
         if (fromIndex < 0 || fromIndex >= root.pinned.length) return;
         if (toIndex < 0 || toIndex >= root.pinned.length) return;
-        const item = root.pinned[fromIndex];
         const arr = root.pinned.slice();
-        arr.splice(fromIndex, 1);
+        const item = arr.splice(fromIndex, 1)[0];
         arr.splice(toIndex, 0, item);
         root.pinned = arr;
+        root.savePinned();
     }
 
     function _scanBadges() {
@@ -285,6 +320,7 @@ Singleton {
     function iconSource(icon) {
         if (!icon) return "";
         const isUrl = icon.startsWith("file://") || icon.startsWith("http") || icon.startsWith("image://");
+        const isAbs = icon.startsWith("/");
         const base = icon.split("/").pop();
         if (Appearance.iconTintActive && root.tintSet[base] && root._tintFor === root.tintSlug)
             return root.tintDirUrl + base;
@@ -293,6 +329,7 @@ Singleton {
                 return root.iconsDir + "dark/" + base;
         }
         if (isUrl) return icon;
+        if (isAbs) return "file://" + icon;
         return root.iconsDir + icon;
     }
 

@@ -6,7 +6,7 @@
         "scrollBars": "When scrolling",
         "sidebarIconSize": "Medium"
     },
-    "avatarPath": "/home/revo/.local/share/systemsettings/avatar-1790780655549.png",
+    "avatarPath": "/home/whysooraj/.local/share/systemsettings/avatar-1790780655549.png",
     "bar": {
         "showBackground": false
     },
@@ -22,12 +22,84 @@
     "dockIconSize": 52,
     "dockIndicators": true,
     "dockMagnification": true,
+    "dockPinnedApps": [
+        {
+            "name": "Finder",
+            "icon": "Finder.png",
+            "desktop": "org.gnome.Nautilus",
+            "exec": "nautilus",
+            "appIds": ["org.gnome.Nautilus", "nautilus", "dolphin", "org.kde.dolphin"]
+        },
+        {
+            "name": "Launchpad",
+            "icon": "Apps.png",
+            "desktop": "macos-launcher",
+            "exec": "quickshell -p /home/whysooraj/.config/revo/quickshell/macos/shell.qml ipc call launchpad toggle",
+            "appIds": ["macos-launcher", "Launcher"]
+        },
+        {
+            "name": "Helium Browser",
+            "icon": "helium-browser.png",
+            "desktop": "helium",
+            "exec": "helium-browser",
+            "appIds": ["helium-browser", "Helium-browser", "helium"]
+        },
+        {
+            "name": "ZapFast",
+            "icon": "zapfast.png",
+            "desktop": "zapfast",
+            "exec": "zapfast",
+            "appIds": ["zapfast", "Zapfast"]
+        },
+        {
+            "name": "Google Chrome",
+            "icon": "google-chrome.png",
+            "desktop": "google-chrome",
+            "exec": "google-chrome-stable",
+            "appIds": ["google-chrome", "google-chrome-stable"]
+        },
+        {
+            "name": "VS Code",
+            "icon": "code.png",
+            "desktop": "code-oss",
+            "exec": "code",
+            "appIds": ["code-oss", "code", "com.visualstudio.code"]
+        },
+        {
+            "name": "Terminal",
+            "icon": "Terminal.png",
+            "desktop": "kitty",
+            "exec": "kitty",
+            "appIds": ["kitty", "ghostty"]
+        },
+        {
+            "name": "Telegram",
+            "icon": "Telegram.png",
+            "desktop": "org.telegram.desktop",
+            "exec": "telegram-desktop",
+            "appIds": ["org.telegram.desktop", "telegram-desktop"]
+        },
+        {
+            "name": "Steam",
+            "icon": "Steam.png",
+            "desktop": "steam",
+            "exec": "steam",
+            "appIds": ["steam", "com.valvesoftware.Steam"]
+        },
+        {
+            "name": "System Settings",
+            "icon": "System Settings.png",
+            "desktop": "systemsettings",
+            "exec": "systemsettings",
+            "appIds": ["systemsettings", "macos-settings", "pearos-settings", "pearos-settings-app"]
+        }
+    ],
     "dockPosition": "bottom",
-    "dockShowAnimation": true,
+    "dockShowAnimation": false,
     "dockZoom": 69,
     "folderColor": "",
     "highlightColor": "#0A6CFF",
-    "iconStyle": "Default",
+    "iconStyle": "Dark",
     "iconStyleMode": "Always",
     "iconTint": "#62BA46",
     "liquidGlass": "Clear",
@@ -38,6 +110,7 @@
         "clock": true,
         "controlcenter": true,
         "display": true,
+        "enabledApps": "ChatGPTHelper|DockFlow|Elgato Stream Deck|LookAway|Notion Calendar|PastePal|Rize|Substage|Umbra|Wispr Flow",
         "mirror": false,
         "siri": false,
         "sound": true,
@@ -54,6 +127,9 @@
     "menubarSpotlight": true,
     "menubarTray": true,
     "menubarWifi": true,
+    "privacy": {
+        "location": false
+    },
     "reduceMotion": true,
     "spotlightEnable": true
 }

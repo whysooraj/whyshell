@@ -31,8 +31,12 @@ Singleton {
     }
     Process { id: cfgWriter; running: false }
     function set(k, v) {
-        cfgWriter.command = ["python3", Quickshell.env("HOME") + "/.config/quickshell/macos/scripts/setcfg.py", k, JSON.stringify(v)]
-        cfgWriter.running = true
+        try {
+            Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/quickshell/macos/scripts/setcfg.py", k, JSON.stringify(v)]);
+        } catch (e) {
+            cfgWriter.command = ["python3", Quickshell.env("HOME") + "/.config/quickshell/macos/scripts/setcfg.py", k, JSON.stringify(v)];
+            cfgWriter.running = true;
+        }
     }
 
     readonly property color accent: (userCfg && userCfg.accentColor) ? userCfg.accentColor : "#315bdc"
