@@ -71,7 +71,7 @@ local function autostart()
     hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-size 24")
     hl.exec_cmd(HYPR_DIR .. "/sounds/keysound.py")
 
-    hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+    hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE")
     hl.exec_cmd("hyprctl eval 'hl.plugin.hypr3d.toggle()'")
 end
 

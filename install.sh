@@ -451,6 +451,25 @@ build_native() {
     run "$SUDO cmake --install '$qs/imported-1789667132/build' || true"
   fi
   build_systemsettings
+  install_screentime
+}
+
+# Screen Time Tracker daemon → ~/.local/bin/revo-screentime
+install_screentime() {
+  local scr="$ROOT/hypr/scripts/revo-screentime"
+  local bin="$HOME/.local/bin/revo-screentime"
+  local svc_src="$ROOT/hypr/scripts/revo-screentime.service"
+  local svc_dst="$HOME/.config/systemd/user/revo-screentime.service"
+  [[ -f "$scr" ]] || return 0
+  mkdir -p "$HOME/.local/bin" "$HOME/.config/systemd/user"
+  install -m755 "$scr" "$bin" 2>/dev/null || true
+  ln -sf "$bin" "$HOME/.local/bin/whyshell-screentime" 2>/dev/null || true
+  if [[ -f "$svc_src" ]]; then
+    install -m644 "$svc_src" "$svc_dst" 2>/dev/null || true
+    systemctl --user daemon-reload 2>/dev/null || true
+    systemctl --user enable --now revo-screentime.service 2>/dev/null || true
+  fi
+  printf '  [fixed] revo-screentime\n'
 }
 
 # SystemSettings app (Qt6) → ~/.local/bin/systemsettings

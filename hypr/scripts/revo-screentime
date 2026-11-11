@@ -1,0 +1,468 @@
+#!/usr/bin/env python3
+"""
+revo-screentime: Native lightweight Hyprland active window & screen time tracker.
+Zero heavy dependencies, pure standard library (json, time, os, subprocess, sys).
+"""
+import sys
+import os
+import json
+import time
+import subprocess
+from datetime import datetime, date
+
+DATA_DIR = os.path.expanduser("~/.local/share/revo-screentime")
+os.makedirs(DATA_DIR, exist_ok=True)
+DATA_FILE = os.path.join(DATA_DIR, "data.json")
+LIMITS_FILE = os.path.join(DATA_DIR, "limits.json")
+LOCK_FILE = os.path.join(DATA_DIR, "tracker.pid")
+
+# Legacy compatibility
+LEGACY_DIR = os.path.expanduser("~/.local/share/screentime")
+LEGACY_FILE = os.path.join(LEGACY_DIR, "daily.json")
+
+# Category classification catalog
+APP_CATALOG = {
+    # Development
+    "kitty": ("Kitty", "Development"),
+    "alacritty": ("Alacritty", "Development"),
+    "wezterm": ("WezTerm", "Development"),
+    "foot": ("Foot", "Development"),
+    "dev.zed.zed": ("Zed", "Development"),
+    "zed": ("Zed", "Development"),
+    "code": ("VS Code", "Development"),
+    "code-oss": ("Code OSS", "Development"),
+    "com.visualstudio.code": ("VS Code", "Development"),
+
+    # Browsing
+    "google-chrome": ("Google Chrome", "Browsing"),
+    "helium-browser": ("Helium", "Browsing"),
+    "helium": ("Helium", "Browsing"),
+    "zen": ("Zen Browser", "Browsing"),
+    "firefox": ("Firefox", "Browsing"),
+    "chromium": ("Chromium", "Browsing"),
+    "brave-browser": ("Brave", "Browsing"),
+
+    # Communication
+    "org.telegram.desktop": ("Telegram", "Communication"),
+    "telegram-desktop": ("Telegram", "Communication"),
+    "discord": ("Discord", "Communication"),
+    "slack": ("Slack", "Communication"),
+
+    # Media
+    "lastwave_desktop": ("Lastwave", "Media"),
+    "lastwave": ("Lastwave", "Media"),
+    "spotify": ("Spotify", "Media"),
+    "vlc": ("VLC", "Media"),
+    "mpv": ("MPV", "Media"),
+
+    # Gaming
+    "steam": ("Steam", "Gaming"),
+    "lutris": ("Lutris", "Gaming"),
+    "heroic": ("Heroic Games", "Gaming"),
+
+    # Productivity
+    "md.obsidian.obsidian": ("Obsidian", "Productivity"),
+    "obsidian": ("Obsidian", "Productivity"),
+    "org.gnome.nautilus": ("Files", "Productivity"),
+    "nautilus": ("Files", "Productivity"),
+    "systemsettings": ("System Settings", "Productivity"),
+}
+
+CATEGORY_COLORS = {
+    "Development": "#0A84FF",
+    "Browsing": "#34C759",
+    "Communication": "#FF9F0A",
+    "Media": "#FF375F",
+    "Gaming": "#AF52DE",
+    "Productivity": "#5E5CE6",
+    "Other": "#8E8E93"
+}
+
+def empty_categories_dict():
+    return {
+        "Development": 0,
+        "Browsing": 0,
+        "Communication": 0,
+        "Media": 0,
+        "Gaming": 0,
+        "Productivity": 0,
+        "Other": 0
+    }
+
+def classify_app(app_class, title=""):
+    if not app_class:
+        return "Unknown", "Other"
+    cls_lower = app_class.lower().strip()
+    
+    # 1. Exact match
+    if cls_lower in APP_CATALOG:
+        return APP_CATALOG[cls_lower]
+        
+    # 2. Check catalog keys sorted by length descending
+    for key in sorted(APP_CATALOG.keys(), key=len, reverse=True):
+        if key in cls_lower:
+            return APP_CATALOG[key]
+            
+    # 3. Fallback capitalization
+    display_name = app_class.split(".")[-1].capitalize() if "." in app_class else app_class.capitalize()
+    return display_name, "Other"
+
+def get_today_data():
+    today_str = str(date.today())
+    target_files = [DATA_FILE]
+    if not os.path.exists(DATA_FILE) and os.path.exists(LEGACY_FILE):
+        target_files.append(LEGACY_FILE)
+
+    for fpath in target_files:
+        if os.path.exists(fpath):
+            try:
+                with open(fpath, "r") as f:
+                    data = json.load(f)
+                    if data.get("date") == today_str:
+                        # Ensure fields exist
+                        if "hourly" not in data or len(data["hourly"]) != 24:
+                            data["hourly"] = [0] * 24
+                        if "hourly_by_category" not in data or len(data["hourly_by_category"]) != 24:
+                            data["hourly_by_category"] = [empty_categories_dict() for _ in range(24)]
+                        if "by_category" not in data:
+                            data["by_category"] = empty_categories_dict()
+
+                        # Re-verify apps category classification and aggregate by_category
+                        apps = data.get("apps", {})
+                        by_cat = empty_categories_dict()
+                        for app_key, app_info in apps.items():
+                            disp, cat = classify_app(app_info.get("class", app_key))
+                            app_info["name"] = app_info.get("name") or disp
+                            app_info["category"] = cat
+                            by_cat[cat] = by_cat.get(cat, 0) + app_info.get("seconds", 0)
+
+                        for k, v in by_cat.items():
+                            if data["by_category"].get(k, 0) < v:
+                                data["by_category"][k] = v
+
+                        # Persist to DATA_FILE if it was missing
+                        if not os.path.exists(DATA_FILE):
+                            save_today_data(data)
+
+                        return data
+            except Exception:
+                pass
+
+    return {
+        "date": today_str,
+        "total_seconds": 0,
+        "by_category": empty_categories_dict(),
+        "hourly": [0] * 24,
+        "hourly_by_category": [empty_categories_dict() for _ in range(24)],
+        "apps": {}
+    }
+
+def save_today_data(data):
+    tmp_file = DATA_FILE + ".tmp"
+    with open(tmp_file, "w") as f:
+        json.dump(data, f, indent=2)
+    os.replace(tmp_file, DATA_FILE)
+
+    if os.path.exists(LEGACY_DIR):
+        try:
+            legacy_tmp = LEGACY_FILE + ".tmp"
+            with open(legacy_tmp, "w") as f:
+                json.dump(data, f, indent=2)
+            os.replace(legacy_tmp, LEGACY_FILE)
+        except Exception:
+            pass
+
+def load_limits():
+    if os.path.exists(LIMITS_FILE):
+        try:
+            with open(LIMITS_FILE, "r") as f:
+                limits = json.load(f)
+                if isinstance(limits, dict):
+                    return limits
+        except Exception:
+            pass
+    return {}
+
+def save_limits(limits):
+    tmp_file = LIMITS_FILE + ".tmp"
+    with open(tmp_file, "w") as f:
+        json.dump(limits, f, indent=2)
+    os.replace(tmp_file, LIMITS_FILE)
+
+def get_app_limit(app_class, limits):
+    if not limits or not isinstance(limits, dict) or not app_class:
+        return None, None
+    cls_lower = app_class.lower().strip()
+
+    # 1. Exact match
+    for lk, lval in limits.items():
+        if lk == app_class or lk.lower().strip() == cls_lower:
+            try:
+                return lk, int(lval)
+            except (ValueError, TypeError):
+                pass
+
+    # 2. Substring match
+    for lk, lval in limits.items():
+        lk_lower = lk.lower().strip()
+        if lk_lower in cls_lower or cls_lower in lk_lower:
+            try:
+                return lk, int(lval)
+            except (ValueError, TypeError):
+                pass
+
+    return None, None
+
+def ensure_hyprland_env(force=False):
+    if not force and os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        sig = os.environ["HYPRLAND_INSTANCE_SIGNATURE"]
+        xdg_runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+        sock = os.path.join(xdg_runtime, "hypr", sig, ".socket.sock")
+        if os.path.exists(sock):
+            return True
+
+    xdg_runtime = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+    for base in [os.path.join(xdg_runtime, "hypr"), "/tmp/hypr"]:
+        if os.path.isdir(base):
+            try:
+                candidates = []
+                for d in os.listdir(base):
+                    sock = os.path.join(base, d, ".socket.sock")
+                    if os.path.exists(sock):
+                        candidates.append((os.path.getmtime(sock), d))
+                if candidates:
+                    candidates.sort(reverse=True)
+                    os.environ["HYPRLAND_INSTANCE_SIGNATURE"] = candidates[0][1]
+                    return True
+            except Exception:
+                pass
+    return False
+
+def get_active_window():
+    ensure_hyprland_env()
+    try:
+        res = subprocess.run(
+            ["hyprctl", "activewindow", "-j"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=1
+        )
+        if res.returncode != 0:
+            if ensure_hyprland_env(force=True):
+                res = subprocess.run(
+                    ["hyprctl", "activewindow", "-j"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    timeout=1
+                )
+        if res.returncode == 0 and res.stdout.strip():
+            w = json.loads(res.stdout)
+            app_class = (w.get("class") or w.get("initialClass") or "").strip()
+            title = (w.get("title") or w.get("initialTitle") or "").strip()
+            if app_class:
+                return app_class, title
+    except Exception:
+        pass
+    return None, None
+
+def run_daemon():
+    try:
+        with open(LOCK_FILE, "w") as f:
+            f.write(str(os.getpid()))
+    except Exception:
+        pass
+
+    poll_interval = 2.0
+    last_save = time.time()
+    last_limits_reload = 0
+    limits = load_limits()
+    notification_cooldowns = {}
+    data = get_today_data()
+
+    while True:
+        try:
+            time.sleep(poll_interval)
+            today_str = str(date.today())
+            if data.get("date") != today_str:
+                data = get_today_data()
+                notification_cooldowns.clear()
+
+            now = time.time()
+            if now - last_limits_reload >= 6:
+                limits = load_limits()
+                last_limits_reload = now
+
+            app_class, title = get_active_window()
+            if app_class:
+                display_name, category = classify_app(app_class, title)
+                app_key = app_class.lower().strip()
+                delta = int(poll_interval)
+
+                data["total_seconds"] = data.get("total_seconds", 0) + delta
+
+                # Daily category aggregate
+                by_cat = data.setdefault("by_category", empty_categories_dict())
+                by_cat[category] = by_cat.get(category, 0) + delta
+
+                # Hourly aggregate
+                curr_hour = datetime.now().hour
+                if "hourly" not in data or len(data["hourly"]) != 24:
+                    data["hourly"] = [0] * 24
+                data["hourly"][curr_hour] += delta
+
+                # Hourly category aggregate
+                if "hourly_by_category" not in data or len(data["hourly_by_category"]) != 24:
+                    data["hourly_by_category"] = [empty_categories_dict() for _ in range(24)]
+                hourly_cats = data["hourly_by_category"][curr_hour]
+                hourly_cats[category] = hourly_cats.get(category, 0) + delta
+
+                # Apps aggregate
+                apps = data.setdefault("apps", {})
+                if app_key not in apps:
+                    apps[app_key] = {
+                        "name": display_name,
+                        "class": app_class,
+                        "category": category,
+                        "seconds": 0
+                    }
+                apps[app_key]["seconds"] += delta
+                apps[app_key]["category"] = category
+                apps[app_key]["name"] = display_name
+                apps[app_key]["class"] = app_class
+
+                # Check App Limits
+                limit_key, limit_secs = get_app_limit(app_class, limits)
+                if limit_secs is not None and limit_secs > 0:
+                    current_app_secs = apps[app_key]["seconds"]
+                    if current_app_secs >= limit_secs:
+                        last_notif = notification_cooldowns.get(app_key, 0)
+                        # Cooldown 10 minutes (600s)
+                        if now - last_notif >= 600:
+                            notification_cooldowns[app_key] = now
+                            target_app_name = display_name or app_class
+                            subprocess.run([
+                                "notify-send",
+                                "-a", "Screen Time",
+                                "-i", "sb_screen-time",
+                                "Screen Time Limit",
+                                f"You have reached your daily limit for {target_app_name}"
+                            ], stderr=subprocess.DEVNULL)
+
+            if time.time() - last_save >= 6:
+                save_today_data(data)
+                last_save = time.time()
+        except KeyboardInterrupt:
+            save_today_data(data)
+            break
+        except Exception:
+            time.sleep(1)
+
+def run_summary():
+    data = get_today_data()
+    total_sec = data.get("total_seconds", 0)
+    limits = load_limits()
+
+    # Category breakdown
+    cat_totals = data.get("by_category", empty_categories_dict())
+    categories_list = []
+    for cat_name, col in CATEGORY_COLORS.items():
+        secs = cat_totals.get(cat_name, 0)
+        pct = round((secs / max(1, total_sec)) * 100, 1) if total_sec > 0 else 0.0
+        categories_list.append({
+            "name": cat_name,
+            "seconds": secs,
+            "formatted": format_duration(secs),
+            "percent": pct,
+            "color": col
+        })
+    categories_list.sort(key=lambda x: x["seconds"], reverse=True)
+
+    sorted_apps = sorted(data.get("apps", {}).items(), key=lambda x: x[1].get("seconds", 0), reverse=True)
+    apps_list = []
+    for k, v in sorted_apps[:24]:
+        app_cls = v.get("class", k)
+        lk, lsecs = get_app_limit(app_cls, limits)
+        if lsecs is None:
+            lk, lsecs = get_app_limit(k, limits)
+        apps_list.append({
+            "id": k,
+            "class": app_cls,
+            "name": v.get("name", k),
+            "category": v.get("category", "Other"),
+            "seconds": v.get("seconds", 0),
+            "formatted": format_duration(v.get("seconds", 0)),
+            "percent": round((v.get("seconds", 0) / max(1, total_sec)) * 100, 1) if total_sec > 0 else 0.0,
+            "limit": lsecs or 0,
+            "limit_formatted": format_duration(lsecs) if lsecs else ""
+        })
+
+    summary = {
+        "date": data.get("date"),
+        "total_seconds": total_sec,
+        "total_formatted": format_duration(total_sec),
+        "hourly": data.get("hourly", [0] * 24),
+        "hourly_by_category": data.get("hourly_by_category", [empty_categories_dict() for _ in range(24)]),
+        "by_category": cat_totals,
+        "categories": categories_list,
+        "limits": limits,
+        "apps": apps_list
+    }
+    print(json.dumps(summary))
+
+def format_duration(secs):
+    if not secs or secs <= 0:
+        return "0m"
+    hours = secs // 3600
+    mins = (secs % 3600) // 60
+    rem_secs = secs % 60
+    if hours > 0:
+        return f"{hours}h {mins}m"
+    if mins > 0:
+        return f"{mins}m"
+    return f"{rem_secs}s"
+
+if __name__ == "__main__":
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "summary"
+    if cmd == "daemon":
+        run_daemon()
+    elif cmd == "summary":
+        run_summary()
+    elif cmd == "set-limit" and len(sys.argv) >= 4:
+        app = sys.argv[2]
+        try:
+            secs = int(sys.argv[3])
+            limits = load_limits()
+            limits[app] = secs
+            save_limits(limits)
+            print(f"Set limit for {app} to {secs}s")
+        except ValueError:
+            print("Invalid seconds limit", file=sys.stderr)
+            sys.exit(1)
+    elif cmd == "remove-limit" and len(sys.argv) >= 3:
+        app = sys.argv[2]
+        limits = load_limits()
+        if app in limits:
+            del limits[app]
+        else:
+            for k in list(limits.keys()):
+                if k.lower().strip() == app.lower().strip():
+                    del limits[k]
+        save_limits(limits)
+        print(f"Removed limit for {app}")
+    elif cmd == "get-limits":
+        print(json.dumps(load_limits(), indent=2))
+    elif cmd == "clear":
+        data = {
+            "date": str(date.today()),
+            "total_seconds": 0,
+            "by_category": empty_categories_dict(),
+            "hourly": [0] * 24,
+            "hourly_by_category": [empty_categories_dict() for _ in range(24)],
+            "apps": {}
+        }
+        save_today_data(data)
+        print("Screen time data cleared")
+    else:
+        run_summary()
