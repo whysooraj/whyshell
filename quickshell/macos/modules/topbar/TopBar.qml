@@ -169,14 +169,37 @@ PanelWindow {
         else root.openMenu = name;
     }
 
+    function formatShortcut(s) {
+        if (!s) return "";
+        let res = s;
+        res = res.replace(/\u2303\u2318/g, "Ctrl+Super+")
+                 .replace(/\u2325\u21e7\u2318/g, "Ctrl+Alt+Shift+")
+                 .replace(/\u2325\u2318\u21e7/g, "Ctrl+Alt+Shift+")
+                 .replace(/\u21e7\u2318/g, "Ctrl+Shift+")
+                 .replace(/\u2325\u2318/g, "Ctrl+Alt+")
+                 .replace(/⌃⌘/g, "Ctrl+Super+")
+                 .replace(/⇧⌘/g, "Ctrl+Shift+")
+                 .replace(/\u2318/g, "Ctrl+")
+                 .replace(/\u21e7/g, "Shift+")
+                 .replace(/\u2325/g, "Alt+")
+                 .replace(/\u2303/g, "Ctrl+")
+                 .replace(/\u232b/g, "Backspace")
+                 .replace(/\u2191/g, "Up")
+                 .replace(/\u2193/g, "Down")
+                 .replace(/\u2190/g, "Left")
+                 .replace(/\u2192/g, "Right");
+        return res;
+    }
+
     function sendCombo(mods, key) {
         root.closeAllMenus();
         const tl = ToplevelManager.activeToplevel;
         if (tl && typeof tl.activate === "function") tl.activate();
+        const mappedMods = (mods || []).map(m => m === "logo" ? "ctrl" : m);
         let cmd = "sleep 0.08; wtype";
-        for (const m of mods) cmd += " -M " + m;
+        for (const m of mappedMods) cmd += " -M " + m;
         cmd += " -k " + key;
-        for (const m of mods) cmd += " -m " + m;
+        for (const m of mappedMods) cmd += " -m " + m;
         root.run(cmd);
     }
 
@@ -312,6 +335,18 @@ PanelWindow {
         }
 
         if (name === "edit") {
+            if (isTerminal) {
+                return [
+                    { label: "Copy", sub: "\u21e7\u2318C", onClick: () => root.sendCombo(["ctrl", "shift"], "c") },
+                    { label: "Paste", sub: "\u21e7\u2318V", onClick: () => root.sendCombo(["ctrl", "shift"], "v") },
+                    { sep: true },
+                    { label: "Select All", sub: "\u21e7\u2318A", onClick: () => root.sendCombo(["ctrl", "shift"], "a") },
+                    { label: "Clear Screen", sub: "\u2318L", onClick: () => root.sendCombo(["ctrl"], "l") },
+                    { sep: true },
+                    { label: "Find…", sub: "\u21e7\u2318F", onClick: () => root.sendCombo(["ctrl", "shift"], "f") },
+                    { label: "Reset Terminal", sub: "", onClick: () => root.run("sleep 0.05; wtype -M ctrl -k c -m ctrl; wtype 'reset\n'") }
+                ];
+            }
             if (isBrowser) {
                 return [
                     { label: "Undo", sub: "\u2318Z", onClick: () => root.sendCombo(["logo"], "z") },
@@ -481,15 +516,14 @@ PanelWindow {
 
         if (name === "window") {
             const items = [];
-            items.push({ label: "Minimize", sub: "\u2318M", onClick: () => { if (tl) tl.minimized = true; } });
-            items.push({ label: "Zoom", onClick: () => { if (tl) tl.maximized = !tl.maximized; } });
-            if (!isTerminal && !isMedia) {
-                items.push({ sep: true });
-                items.push({ label: "Move Window to Left Side of Screen", onClick: () => {} });
-                items.push({ label: "Move Window to Right Side of Screen", onClick: () => {} });
-            }
+            items.push({ label: "Minimize", sub: "Super+M", onClick: () => { if (tl) tl.minimized = true; } });
+            items.push({ label: "Zoom / Maximize", sub: "Super+F", onClick: () => { if (tl) tl.maximized = !tl.maximized; } });
+            items.push({ label: "Toggle Full Screen", sub: "F11", onClick: () => { if (tl) tl.fullscreen = !tl.fullscreen; } });
             items.push({ sep: true });
-            items.push({ label: "Cycle Through Windows", sub: "\u2318`", onClick: () => root.sendCombo(["logo"], "grave") });
+            items.push({ label: "Move Window to Left Side", sub: "Super+Shift+Left", onClick: () => root.run("hyprctl dispatch movewindow l") });
+            items.push({ label: "Move Window to Right Side", sub: "Super+Shift+Right", onClick: () => root.run("hyprctl dispatch movewindow r") });
+            items.push({ sep: true });
+            items.push({ label: "Cycle Windows", sub: "Alt+Tab", onClick: () => root.run("hyprctl dispatch cyclenext") });
             items.push({ sep: true });
             const tops = ToplevelManager.toplevels?.values ?? [];
             for (const t of tops) {
@@ -503,29 +537,29 @@ PanelWindow {
 
         if (name === "help") {
             return [
-                { label: appName + " Help", sub: "\u21e7\u2318?", onClick: () => root.sendCombo(["logo", "shift"], "question") },
+                { label: appName + " Help", sub: "F1", onClick: () => root.sendCombo([], "F1") },
                 { sep: true },
-                { label: "Search", onClick: () => { root.closeAllMenus(); ShellController.toggle("spotlight"); } }
+                { label: "Search", sub: "Super+Space", onClick: () => { root.closeAllMenus(); ShellController.toggle("spotlight"); } },
+                { label: "Hyprland Keybinds", sub: "", onClick: () => root.run("hyprctl binds | zenity --text-info --title='Hyprland Keybinds' 2>/dev/null || true") },
+                { sep: true },
+                { label: "About Revo Shell", onClick: () => ShellController.openAbout() }
             ];
         }
 
         // Terminal - Shell menu
         if (name === "shell") {
             return [
-                { label: "New Window", sub: "\u2318N", onClick: () => root.sendCombo(["logo"], "n") },
-                { label: "New Tab", sub: "\u2318T", onClick: () => root.sendCombo(["logo", "shift"], "t") },
+                { label: "New Window", sub: "\u21e7\u2318N", onClick: () => root.run(al || "kitty") },
+                { label: "New Tab", sub: "\u21e7\u2318T", onClick: () => root.sendCombo(["ctrl", "shift"], "t") },
                 { sep: true },
-                { label: "Close Tab", sub: "\u2318W", onClick: () => root.sendCombo(["logo", "shift"], "w") },
-                { label: "Close Window", sub: "\u21e7\u2318W", onClick: () => { if (tl && typeof tl.close === "function") tl.close(); } },
+                { label: "Close Tab", sub: "\u21e7\u2318W", onClick: () => root.sendCombo(["ctrl", "shift"], "w") },
+                { label: "Close Window", sub: "\u21e7\u2318Q", onClick: () => { if (tl && typeof tl.close === "function") tl.close(); } },
                 { sep: true },
-                { label: "Split Horizontal", sub: "\u2318D", onClick: () => root.sendCombo(["logo", "shift"], "d") },
-                { label: "Split Vertical", sub: "\u2318E", onClick: () => root.sendCombo(["logo", "shift"], "e") },
+                { label: "Split Horizontal", sub: "Ctrl+Shift+Enter", onClick: () => root.sendCombo(["ctrl", "shift"], "Return") },
+                { label: "Split Vertical", sub: "Ctrl+Shift+D", onClick: () => root.sendCombo(["ctrl", "shift"], "d") },
                 { sep: true },
-                { label: "Clear Scrollback", sub: "\u2318K", onClick: () => root.sendCombo(["logo"], "k") },
-                { label: "Reset", onClick: () => {} },
-                { sep: true },
-                { label: "Export Text As\u2026", onClick: () => {} },
-                { label: "Print\u2026", sub: "\u2318P", onClick: () => root.sendCombo(["logo"], "p") }
+                { label: "Clear Scrollback", sub: "\u21e7\u2318K", onClick: () => root.sendCombo(["ctrl", "shift"], "k") },
+                { label: "Reset Terminal", sub: "", onClick: () => root.run("sleep 0.05; wtype -M ctrl -k c -m ctrl; wtype 'reset\n'") }
             ];
         }
 
@@ -964,13 +998,7 @@ PanelWindow {
     }
 
     function run(cmd) {
-        _launcher.command = ["bash", "-c", "setsid -f " + cmd + " >/dev/null 2>&1"];
-        _launcher.running = true;
-    }
-    Process {
-        id: _launcher; running: false
-        stdout: StdioCollector {}
-        stderr: StdioCollector {}
+        Quickshell.execDetached(["bash", "-c", cmd]);
     }
 
     Connections {
@@ -1021,7 +1049,7 @@ PanelWindow {
             visible: !pit.checked
             anchors.right: parent.right; anchors.rightMargin: 10
             anchors.verticalCenter: parent.verticalCenter
-            text: pit.sub
+            text: root.formatShortcut(pit.sub)
             font { family: Appearance.fontFamily; pixelSize: 12 }
             color: root.barFgDim
         }
@@ -1846,7 +1874,7 @@ PanelWindow {
                     Text {
                         anchors.right: parent.right; anchors.rightMargin: 10
                         anchors.verticalCenter: parent.verticalCenter
-                        text: ai.sublabel
+                        text: root.formatShortcut(ai.sublabel)
                         font { family: Appearance.fontFamily; pixelSize: 12 }
                         color: root.barFgDim
                     }
@@ -1866,8 +1894,8 @@ PanelWindow {
                 AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/arrow-counterclockwise.svg"); label: "Restart..."; onClick: () => ShellController.requestAction("restart") }
                 AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/dropdown/power.svg"); label: "Shut Down..."; onClick: () => ShellController.requestAction("shutdown") }
                 ASep {}
-                AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/dropdown/lock.svg"); label: "Lock Screen"; sublabel: "⌃⌘Q"; onClick: () => ShellController.action("lock") }
-                AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/arrow-right.svg"); label: "Log Out Revo..."; sublabel: "⇧⌘Q"; onClick: () => ShellController.requestAction("logout") }
+                AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/dropdown/lock.svg"); label: "Lock Screen"; sublabel: "Ctrl+Super+Q"; onClick: () => ShellController.action("lock") }
+                AMItem { icon: Qt.resolvedUrl(Quickshell.shellDir + "/media/icons/arrow-right.svg"); label: "Log Out Revo..."; sublabel: "Ctrl+Shift+Q"; onClick: () => ShellController.requestAction("logout") }
             }
         }
     }
@@ -1912,7 +1940,7 @@ PanelWindow {
                         Text {
                             visible: modelData.sep !== true && !!modelData.sub
                             anchors.right: parent.right; anchors.rightMargin: 10; anchors.verticalCenter: parent.verticalCenter
-                            text: modelData.sub || ""
+                            text: root.formatShortcut(modelData.sub || "")
                             font { family: Appearance.fontFamily; pixelSize: 12 }
                             color: root.barFgDim
                         }
