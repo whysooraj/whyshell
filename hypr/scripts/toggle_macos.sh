@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-MY_QML_DIR="/home/whysooraj/.config/revo/hypr/scripts/quickshell"
-MACOS_QML="/home/whysooraj/.config/revo/quickshell/macos/shell.qml"
+MY_QML_DIR="$HOME/.config/revo/hypr/scripts/quickshell"
+MACOS_QML="$HOME/.config/revo/quickshell/macos/shell.qml"
 
 macos_running() {
     pgrep -f "quickshell.*-p .*quickshell/macos" >/dev/null 2>&1 || pgrep -f "quickshell.*macos/shell\.qml" >/dev/null 2>&1

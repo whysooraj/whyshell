@@ -9,8 +9,8 @@ Scope {
     PanelWindow {
         id: desktopWindow
         
-        // Bind screen directly to eDP-1
-        screen: Quickshell.screens.find(function(s) { return s.name === "eDP-1"; })
+        // Bind screen to eDP-1 if present, otherwise primary screen
+        screen: Quickshell.screens.find(function(s) { return s.name === "eDP-1"; }) || Quickshell.screens[0]
         
         anchors.fill: parent
         

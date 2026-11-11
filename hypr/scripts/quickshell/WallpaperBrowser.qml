@@ -165,7 +165,7 @@ PanelWindow {
             "W=" + shq(path) + "; " +
             "awww img --transition-type center --transition-step 90 \"$W\" && " +
             "matugen image \"$W\" --source-color-index 0 && " +
-            "bash /home/whysooraj/.config/revo/hypr/scripts/quickshell/wallpaper/matugen_reload.sh"])
+            "bash ~/.config/revo/hypr/scripts/quickshell/wallpaper/matugen_reload.sh"])
         panel.close()
     }
 

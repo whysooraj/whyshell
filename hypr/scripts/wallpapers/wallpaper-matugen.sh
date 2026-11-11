@@ -1,13 +1,13 @@
 #!/bin/bash
 
-SCRIPTS="/home/whysooraj/.config/revo/hypr/scripts"
+SCRIPTS="$HOME/.config/revo/hypr/scripts"
 QS_DIR="$SCRIPTS/quickshell"
 MATUGEN_RELOAD="$QS_DIR/wallpaper/matugen_reload.sh"
 MAIN_QML="$QS_DIR/Main.qml"
 TOPBAR_QML="$QS_DIR/TopBar.qml"
 
 # ─── 1. Run random.sh (change wallpaper + pywal) ─────
-bash "/home/whysooraj/.config/revo/hypr/scripts/wallpapers/random.sh"
+bash "$SCRIPTS/wallpapers/random.sh"
 
 # ─── 2. Get last wallpaper used by wal ─────────────────
 WALLPAPER=$(cat ~/.cache/wal/wal 2>/dev/null)

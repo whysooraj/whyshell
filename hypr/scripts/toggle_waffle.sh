@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-MY_QML_DIR="/home/whysooraj/.config/revo/hypr/scripts/quickshell"
-WAFFLE_DIR="/home/whysooraj/.config/revo/quickshell/ii"
+MY_QML_DIR="$HOME/.config/revo/hypr/scripts/quickshell"
+WAFFLE_DIR="$HOME/.config/revo/quickshell/ii"
 
 waffle_running() {
     pgrep -f "qs -p .*quickshell/ii" >/dev/null 2>&1 || pgrep -f "quickshell.*-p .*quickshell/ii" >/dev/null 2>&1

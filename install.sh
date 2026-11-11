@@ -511,19 +511,14 @@ GREP_SKIP=(--exclude-dir=node_modules --exclude-dir=build --exclude-dir=.git
 
 # list deployed text files that still contain the dev home
 list_dev_path_files() {
-  # on the dev machine itself /home/revo IS $HOME — nothing to rewrite
-  if [[ "$HOME" == "/home/revo" ]]; then
-    return 0
-  fi
   local dir
   for dir in "${FIX_PATHS_DIRS[@]}"; do
     [[ -d "$dir" ]] || continue
-    grep -rIlZ '/home/revo/' "$dir" "${GREP_SKIP[@]}" 2>/dev/null || true
+    grep -rIlZE '(/home/revo/|/home/whysooraj/)' "$dir" "${GREP_SKIP[@]}" 2>/dev/null || true
   done
 }
 
 count_dev_paths() {
-  [[ "$HOME" == "/home/revo" ]] && { printf '0'; return 0; }
   # list is NUL-separated (-Z) — count NULs
   list_dev_path_files | tr -cd '\0' | wc -c | tr -d ' ' || printf '0'
 }
@@ -537,7 +532,7 @@ fix_paths() {
       n=$((n + 1))
       continue
     fi
-    if sed -i "s|/home/revo/|${home_esc}/|g" "$f" 2>/dev/null; then
+    if sed -i -E "s|/home/(revo|whysooraj)/|${home_esc}/|g" "$f" 2>/dev/null; then
       n=$((n + 1))
     else
       log "rewrite failed: $f"
@@ -545,9 +540,9 @@ fix_paths() {
   done < <(list_dev_path_files)
   if [[ "$n" -gt 0 ]]; then
     if [[ "$DRY_RUN" == "1" ]]; then
-      log "DRY: rewrite /home/revo → $HOME in $n file(s)"
+      log "DRY: rewrite dev paths → $HOME in $n file(s)"
     else
-      log "rewrote /home/revo → $HOME in $n file(s)"
+      log "rewrote dev paths → $HOME in $n file(s)"
     fi
   fi
 
@@ -729,10 +724,10 @@ health_check() {
   # no deployed config may still point at the dev machine
   dev_left="$(count_dev_paths)"
   if [[ "${dev_left:-0}" -eq 0 ]]; then
-    printf '  [ok]   no /home/revo paths in deployed configs\n'
+    printf '  [ok]   no dev paths in deployed configs\n'
     pass=$((pass + 1))
   else
-    printf '  [FAIL] %s file(s) still contain /home/revo\n' "$dev_left"
+    printf '  [FAIL] %s file(s) still contain dev paths\n' "$dev_left"
     fail=$((fail + 1))
     fixes+=("re-run ./install.sh          # fix_paths rewrites them")
   fi
@@ -1241,18 +1236,18 @@ verify() {
   local dev_left
   dev_left="$(count_dev_paths)"
   if [[ "$dev_left" -gt 0 && "$DRY_RUN" != "1" ]]; then
-    printf '  [MISS] %s file(s) still contain /home/revo — rewriting\n' "$dev_left"
+    printf '  [MISS] %s file(s) still contain dev paths — rewriting\n' "$dev_left"
     fix_paths >/dev/null 2>&1 || true
     dev_left="$(count_dev_paths)"
   fi
   if [[ "$dev_left" -eq 0 ]]; then
-    printf '  [ok]   no /home/revo paths in deployed configs\n'
+    printf '  [ok]   no dev paths in deployed configs\n'
     pass=$((pass + 1))
   elif [[ "$DRY_RUN" == "1" ]]; then
-    printf '  [ok]   %s file(s) would be rewritten from /home/revo (dry-run)\n' "$dev_left"
+    printf '  [ok]   %s file(s) would be rewritten from dev paths (dry-run)\n' "$dev_left"
     pass=$((pass + 1))
   else
-    printf '  [MISS] %s file(s) still contain /home/revo\n' "$dev_left"
+    printf '  [MISS] %s file(s) still contain dev paths\n' "$dev_left"
     fail=$((fail + 1))
   fi
   log "verify: $pass ok, $fail missing"

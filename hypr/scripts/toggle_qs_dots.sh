@@ -3,8 +3,8 @@
 #  toggle_qs_dots.sh — Switch Quickshell Dots via Rofi / Cycle
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-QS_BASE="/home/whysooraj/.config/revo/quickshell"
-HYPR_QS="/home/whysooraj/.config/revo/hypr/scripts/quickshell"
+QS_BASE="$HOME/.config/revo/quickshell"
+HYPR_QS="$HOME/.config/revo/hypr/scripts/quickshell"
 
 # ─── 1. Detect Currently Active Dot ───────────────────────
 get_active_dot() {
@@ -167,7 +167,7 @@ show_rofi_menu() {
     local selected
     selected=$(echo -e "$options" | rofi -dmenu \
         -p "Quickshell Dots" \
-        -config "/home/whysooraj/.config/revo/rofi/config.rasi" \
+        -config "$HOME/.config/revo/rofi/config.rasi" \
         -theme-str 'listview { columns: 1; lines: 8; spacing: 4px; }' \
         -theme-str 'element { orientation: horizontal; padding: 8px 12px; }' \
         -theme-str 'element-text { enabled: true; vertical-align: 0.5; font: "Inter DemiBold 12"; }' \
