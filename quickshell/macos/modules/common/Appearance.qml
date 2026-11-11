@@ -96,6 +96,9 @@ Singleton {
     property bool menubarClock: cfgGet("menubarClock", true)
     property bool menubarTray: cfgGet("menubarTray", true)
     property bool darkMode: cfgGet("darkMode", false)
+    property string avatarPath: cfgGet("avatarPath", Quickshell.shellDir + "/assets/user.jpg")
+    property string wallpaperPath: cfgGet("wallpaperPath", Quickshell.shellDir + "/assets/wall.jpg")
+    property var lockScreenCfg: cfgGet("lockScreen", ({}))
 
     // ---- macOS Tahoe Appearance: Liquid Glass + Icon & widget style ----
     property string liquidGlass: cfgGet("liquidGlass", "Clear")
