@@ -10,7 +10,7 @@ PanelWindow {
     id: root
 
     screen: (Quickshell.screens && Quickshell.screens.length > 0) ? Quickshell.screens[0] : null
-    anchors.fill: parent
+    anchors { top: true; left: true; right: true; bottom: true }
     color: "transparent"
     visible: ShellController.missionControlOpen && !ShellController.locked
     exclusionMode: ExclusionMode.Ignore

@@ -7,8 +7,22 @@ whyShell is an opinionated, hardware-accelerated Wayland desktop shell built on 
 - Unified TopBar with active application menus, battery, audio, and control center toggles.
 - Liquid glass Dock with smooth magnification, running indicators, and minimized window thumbnails.
 - Authentic macOS Sonoma lock screen with bold rounded typography, drop shadows, frosted glass password pill, and full customization via System Settings or CLI.
+- Native Mission Control and Exposé window overview with Spaces bar (`F3` or `Super + Tab`).
+- Live DBus Global Menu registrar (`com.canonical.AppMenu.Registrar`) integrated with TopBar.
 - Native Qt6 System Settings app (`~/.local/bin/systemsettings`) with direct reactive configuration.
 - Spotlight launcher (`Super + Space`) and full-screen Launchpad.
+
+## Features and Roadmap
+
+- [x] Multi-monitor LockScreen, TopBar, and Dock support
+- [x] Native Mission Control / Exposé window overview with Spaces bar (`F3` / `Super + Tab`)
+- [x] Real DBus Global Menu registrar (`com.canonical.AppMenu.Registrar`)
+- [x] Dynamic TopBar live application menu bar integration
+- [x] Native macOS Sonoma Lock Screen with customizable clocks and wallpapers
+- [x] System Settings GUI and CLI customization tools (`systemsettings`, `whyshell-lock-config`)
+- [x] Notification Center integrated in TopBar clock with Do Not Disturb
+- [ ] Native Wi-Fi password prompt modal and network selector
+- [ ] Live screencopy window thumbnails in Mission Control overview
 
 ## Repository Layout
 

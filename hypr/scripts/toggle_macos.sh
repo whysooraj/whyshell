@@ -36,6 +36,8 @@ stop_macos() {
 }
 
 start_macos() {
+    systemctl --user stop swaync 2>/dev/null || true
+    pkill -x swaync 2>/dev/null || true
     if ! pgrep -f "dbusmenu_bridge\.py" >/dev/null 2>&1; then
         python3 "$HOME/.config/revo/hypr/scripts/dbusmenu_bridge.py" >/dev/null 2>&1 &
     fi

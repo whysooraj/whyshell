@@ -1472,9 +1472,21 @@ PanelWindow {
 
         property var history: []
 
+        function syncFromNotifications() {
+            const list = Notifications.list || [];
+            for (let i = list.length - 1; i >= 0; i--) {
+                if (list[i]) pushHistory(list[i]);
+            }
+        }
+
+        onVisibleChanged: {
+            if (visible) syncFromNotifications();
+        }
+
         function pushHistory(n) {
+            if (!n) return;
             const item = {
-                id: n.id, appName: n.appName || "",
+                id: n.id, appName: n.appName || "Notification",
                 summary: n.summary || "", body: n.body || "",
                 icon: Notifications.iconFor(n), notif: n
             };
@@ -1581,14 +1593,17 @@ PanelWindow {
                         Repeater {
                             model: notificationCenter.history
                             delegate: Rectangle {
+                                id: notifCard
                                 required property var modelData
-                                Layout.fillWidth: true
-                                implicitHeight: 64
-                                radius: 10
-                                color: "transparent"
+                                width: notifCol.width
+                                height: 72
+                                radius: 12
+                                color: notifHover.hovered ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.08)
+                                border.color: notifHover.hovered ? Appearance.accent : Qt.rgba(1, 1, 1, 0.12)
+                                border.width: 1
 
                                 Item {
-                                    x: 10; y: 10; width: 44; height: 44
+                                    x: 10; y: 14; width: 44; height: 44
                                     Rectangle {
                                         anchors.fill: parent; radius: 10; color: "#315bdc"
                                         visible: iconImg.status !== Image.Ready
@@ -1596,7 +1611,7 @@ PanelWindow {
                                     }
                                     Image {
                                         id: iconImg; anchors.fill: parent
-                                        source: modelData.icon
+                                        source: modelData.icon || ""
                                         fillMode: Image.PreserveAspectFit
                                         asynchronous: true
                                         visible: status === Image.Ready
@@ -1604,10 +1619,10 @@ PanelWindow {
                                 }
 
                                 Column {
-                                    x: 64; y: 10; width: parent.width - 64 - 40; spacing: 1
+                                    x: 64; y: 10; width: parent.width - 64 - 40; spacing: 2
                                     Text {
                                         width: parent.width; text: modelData.appName
-                                        font { family: Appearance.fontFamily; pixelSize: 12; weight: Font.DemiBold }
+                                        font { family: Appearance.fontFamily; pixelSize: 11; weight: Font.DemiBold }
                                         color: root.barFgDim; elide: Text.ElideRight
                                     }
                                     Text {
@@ -1623,16 +1638,18 @@ PanelWindow {
                                 }
 
                                 Rectangle {
+                                    z: 10
                                     anchors.right: parent.right; anchors.rightMargin: 8
                                     anchors.top: parent.top; anchors.topMargin: 8
-                                    width: 20; height: 20; radius: 10
-                                    color: delMa.containsMouse ? Appearance.fieldHover : "transparent"
+                                    width: 22; height: 22; radius: 11
+                                    color: delMa.containsMouse ? Appearance.fieldHover : Qt.rgba(1, 1, 1, 0.1)
                                     visible: notifHover.hovered
-                                    Text { anchors.centerIn: parent; text: "✕"; font.pixelSize: 10; color: root.barFgDim }
+                                    Text { anchors.centerIn: parent; text: "✕"; font.pixelSize: 11; color: root.barFg }
                                     MouseArea {
                                         id: delMa; anchors.fill: parent; hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            Notifications.dismiss(modelData.notif);
+                                            if (modelData.notif) Notifications.dismiss(modelData.notif);
                                             notificationCenter.removeHistory(modelData.id);
                                         }
                                     }
@@ -1640,9 +1657,12 @@ PanelWindow {
                                 HoverHandler { id: notifHover }
                                 MouseArea {
                                     anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        Notifications.activate(modelData.notif);
-                                        Notifications.dismiss(modelData.notif);
+                                        if (modelData.notif) {
+                                            Notifications.activate(modelData.notif);
+                                            Notifications.dismiss(modelData.notif);
+                                        }
                                         notificationCenter.removeHistory(modelData.id);
                                         ShellController.notificationsOpen = false;
                                     }

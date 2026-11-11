@@ -1,1 +1,1 @@
-../../../eqsh/ui/components/panel/TrayMenu.qml
+../../../../eqsh/ui/components/panel/TrayMenu.qml

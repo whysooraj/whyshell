@@ -50,5 +50,8 @@ ShellRoot {
         }
     }
 
-    Component.onCompleted: { void Apps.ready; }
+    Component.onCompleted: {
+        void Apps.ready;
+        void Notifications.count;
+    }
 }
