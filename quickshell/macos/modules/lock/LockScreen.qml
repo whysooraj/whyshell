@@ -25,52 +25,69 @@ PanelWindow {
 
     property bool authenticating: false
     property bool failed: false
-    property bool entryVisible: false
+    property bool entryVisible: true
     property string statusText: ""
     property string password: ""
+    property string pendingPassword: ""
 
     onVisibleChanged: {
         if (root.visible) {
             root.password = "";
+            root.pendingPassword = "";
             root.failed = false;
-            root.entryVisible = false;
+            root.entryVisible = true;
             root.statusText = "";
-            pam.start();
+            root.authenticating = false;
+            Qt.callLater(() => {
+                if (passwordField) passwordField.forceActiveFocus();
+            });
         }
     }
 
-    Component.onCompleted: pam.start()
-
     PamContext {
         id: pam
-        user: Quickshell.env("USER")
+        configDirectory: Quickshell.shellDir + "/ui/components/lockscreen/pam"
+        config: "password.conf"
+
+        onPamMessage: {
+            if (this.responseRequired && root.pendingPassword !== "") {
+                this.respond(root.pendingPassword);
+                root.pendingPassword = "";
+            }
+        }
+
         onCompleted: (result) => {
             root.authenticating = false;
             if (result === PamResult.Success) {
+                root.password = "";
+                root.pendingPassword = "";
                 ShellController.unlock();
             } else {
                 root.failed = true;
                 root.statusText = result === PamResult.MaxTries ? "Too many attempts" : "Access Denied";
                 root.password = "";
-                if (root.passwordField) root.passwordField.forceActiveFocus();
-                pam.start();
+                root.pendingPassword = "";
+                if (passwordField) passwordField.forceActiveFocus();
             }
         }
+
         onError: (error) => {
             root.authenticating = false;
             root.statusText = "Authentication failed";
-            pam.start();
+            root.password = "";
+            root.pendingPassword = "";
+            if (passwordField) passwordField.forceActiveFocus();
         }
     }
 
     // Wallpaper
     Image {
         anchors.fill: parent
-        source: Quickshell.env("HOME") + "/.config/quickshell/macos/assets/wall.jpg"
+        source: "file://" + Quickshell.shellDir + "/assets/wall.jpg"
         fillMode: Image.PreserveAspectCrop
     }
 
-    // Dim + blur backdrop
+    // Dim backdrop
     Rectangle {
         anchors.fill: parent
         color: Qt.rgba(0.04, 0.04, 0.06, 0.45)
@@ -110,7 +127,7 @@ PanelWindow {
             anchors.topMargin: 4
             text: Time.timeHourMin
             font { family: "SF Pro"; pixelSize: 120; weight: Font.Bold }
-            color: "#1d1d1f"
+            color: "#ffffff"
         }
 
         // User profile picture - above password field
@@ -129,7 +146,7 @@ PanelWindow {
 
             Image {
                 anchors.fill: parent
-                source: Quickshell.env("HOME") + "/.config/quickshell/macos/assets/user.jpg"
+                source: "file://" + Quickshell.shellDir + "/assets/user.jpg"
                 fillMode: Image.PreserveAspectCrop
             }
         }
@@ -151,7 +168,7 @@ PanelWindow {
                 anchors.fill: parent
                 onClicked: {
                     root.entryVisible = true;
-                    if (root.passwordField) root.passwordField.forceActiveFocus();
+                    if (passwordField) passwordField.forceActiveFocus();
                 }
             }
 
@@ -231,16 +248,10 @@ PanelWindow {
             root.statusText = "Enter your password";
             return;
         }
-        if (root.password === "123") {
-            ShellController.unlock();
-            root.password = "";
-            return;
-        }
-        if (!pam.responseRequired) return;
         root.authenticating = true;
         root.failed = false;
-        root.statusText = "";
-        pam.respond(root.password);
-        root.password = "";
+        root.statusText = "Unlocking\u2026";
+        root.pendingPassword = root.password;
+        pam.start();
     }
 }

@@ -113,16 +113,25 @@ handle_network_prep() {
 MAIN_QML_PATH="$HOME/.config/hypr/scripts/quickshell/Main.qml"
 BAR_QML_PATH="$HOME/.config/hypr/scripts/quickshell/TopBar.qml"
 
-# If Waffle (Windows-look shell) or the macOS-look shell is running, the base
-# shell (Main/TopBar) must stay off. Never bring it back while one of those
-# modes is active, otherwise the shells fight each other. This guard mirrors
-# toggle_waffle.sh's waffle_running() and toggle_macos.sh's macos_running().
-waffle_active() {
-    pgrep -f "qs -p .*quickshell/ii" >/dev/null 2>&1 || pgrep -f "quickshell.*-p .*quickshell/ii" >/dev/null 2>&1 || \
-    pgrep -f "quickshell.*-p .*quickshell/macos" >/dev/null 2>&1 || pgrep -f "quickshell.*macos/shell\.qml" >/dev/null 2>&1
+# If a non-default shell (such as macOS or Waffle) is selected, or if one
+# of those shells is currently running, the base shell (Main/TopBar) must stay off.
+base_shell_disabled() {
+    local marker="$HOME/.config/hypr/.revo_default_shell"
+    [[ ! -f "$marker" ]] && marker="$HOME/.config/revo/hypr/.revo_default_shell"
+    if [[ -f "$marker" ]]; then
+        local def
+        def=$(tr -d '[:space:]' < "$marker")
+        if [[ -n "$def" && "$def" != "default" ]]; then
+            return 0
+        fi
+    fi
+    pgrep -f "qs -p .*quickshell/ii" >/dev/null 2>&1 || \
+    pgrep -f "quickshell.*-p .*quickshell/ii" >/dev/null 2>&1 || \
+    pgrep -f "quickshell.*-p .*quickshell/macos" >/dev/null 2>&1 || \
+    pgrep -f "quickshell.*macos/shell\.qml" >/dev/null 2>&1
 }
 
-if ! waffle_active; then
+if ! base_shell_disabled; then
     if ! pgrep -f "quickshell.*Main\.qml" >/dev/null; then
         quickshell -p "$MAIN_QML_PATH" >/dev/null 2>&1 &
         disown
