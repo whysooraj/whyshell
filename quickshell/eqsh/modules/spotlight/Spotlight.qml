@@ -175,7 +175,7 @@ Scope {
                 visible: true
                 opacity: 0
                 width: root.collapsedWidth + (root.expandedWidth - root.collapsedWidth) * Rail.pill(root.railProgress)
-                height: searchRow.height + (results.height > 0 ? results.height + 8 + 12 : 0)
+                height: searchRow.height + (results.height > 0 ? results.height + 16 + 20 : 0)
                 property real scaleX: 1
                 transform: Scale {
                     xScale: panel.scaleX
@@ -368,13 +368,34 @@ Scope {
                             }
                             focus: true
                             hoverEnabled: true
+                            Keys.priority: Keys.BeforeItem
+                            Keys.onDownPressed: (event) => {
+                                results.keyPressed(event);
+                                event.accepted = true;
+                            }
+                            Keys.onUpPressed: (event) => {
+                                results.keyPressed(event);
+                                event.accepted = true;
+                            }
+                            Keys.onReturnPressed: (event) => {
+                                results.keyPressed(event);
+                                event.accepted = true;
+                            }
+                            Keys.onEnterPressed: (event) => {
+                                results.keyPressed(event);
+                                event.accepted = true;
+                            }
                             onHoveredChanged: {
                                 if (!hovered || root.selectedAction != "") return;
                                 root.actionsShown = true
                                 root.hoveredAction = ""
                             }
                             Keys.onPressed: (event) => {
-                                results.keyPressed(event)
+                                if (event.key === Qt.Key_Down || event.key === Qt.Key_Up || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                    results.keyPressed(event);
+                                    event.accepted = true;
+                                    return;
+                                }
                                 if (event.key === Qt.Key_Escape) Ipc.runMixin("eqdesktop.spotlight", "toggle")
                                 // toggle the mode rail (reference: Tab)
                                 if (event.key === Qt.Key_Tab && root.selectedAction == "") {
@@ -422,11 +443,11 @@ Scope {
                 BoxGlass {
                     id: body
                     x: 0
-                    y: searchRow.height + 12
+                    y: searchRow.height + 20
                     width: root.collapsedWidth
-                    height: results.height > 0 ? results.height + 8 : 0
+                    height: results.height > 0 ? results.height + 16 : 0
                     visible: height > 0
-                    radius: 30
+                    radius: 24
                     color: root.glassColor
                     rimStrength: 1.7
                     light: "#20ffffff"
@@ -436,7 +457,7 @@ Scope {
                     ContentView {
                         id: results
                         x: 4
-                        y: 4
+                        y: 8
                         width: root.collapsedWidth - 8
                         text: search.text
                         selectedAction: root.selectedAction

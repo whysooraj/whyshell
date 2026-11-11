@@ -16,8 +16,9 @@ Rectangle {
     property string icon: Quickshell.iconPath(modelData.icon)
     property var clicked: modelData.clicked
     property bool bgForIcon: true
-    property string textColor: Config.general.darkMode ? "#dfdfdf" : "#222"
-    property string descColor: "#a0555555"
+    readonly property bool isSelected: (ListView.view ? ListView.view.currentIndex === root.index : false) || root.hovered
+    property string textColor: isSelected ? "#ffffff" : "#dfdfdf"
+    property string descColor: isSelected ? "#d8e6ff" : "#8e8e93"
 
     transform: Translate {
         x: 10
@@ -25,10 +26,10 @@ Rectangle {
     width: parent ? parent.width-20 : 0
     height: 50
     radius: 12
-    color: (root.hovered || ListView.isCurrentItem) ? (Config.general.darkMode ? "#30ffffff" : "#18000000") : "transparent"
+    color: isSelected ? "#007aff" : "transparent"
 
     Behavior on color {
-        ColorAnimation { duration: 120 }
+        ColorAnimation { duration: 100 }
     }
 
     property bool hovered: false

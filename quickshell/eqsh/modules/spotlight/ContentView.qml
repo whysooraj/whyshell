@@ -72,11 +72,10 @@ Item {
     CFClippingRect {
         id: clippingRect
         anchors.fill: parent
-        anchors.topMargin: -10
+        radius: 20
         Loader {
             id: loader
             anchors.fill: parent
-            anchors.topMargin: 10
             active: true
             property Component contentGlobal: ContentGlobal {
                 id: contentGlobal
