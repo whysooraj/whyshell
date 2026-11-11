@@ -73,7 +73,6 @@ hl.bind(mainMod .. " + 7", hl.dsp.focus({ workspace = 7 }))
 hl.bind(mainMod .. " + 8", hl.dsp.focus({ workspace = 8 }))
 hl.bind(mainMod .. " + 9", hl.dsp.focus({ workspace = 9 }))
 hl.bind(mainMod .. " + 0", hl.dsp.focus({ workspace = 10 }))
-hl.bind(mainMod .. " + Tab", hl.dsp.focus({ workspace = "previous" }))
 hl.bind(mainMod .. " + ALT + left", hl.dsp.focus({ workspace = "-1" }))
 hl.bind(mainMod .. " + ALT + right", hl.dsp.focus({ workspace = "+1" }))
 

@@ -19,12 +19,45 @@ PanelWindow {
     WlrLayershell.keyboardFocus: root.visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     readonly property var windowList: {
-        var all = ToplevelManager.toplevels.values || [];
-        return all.filter(function(t) {
+        var hlWins = (Hyprland.toplevels && Hyprland.toplevels.values) ? Hyprland.toplevels.values : [];
+        var list = [];
+        for (var i = 0; i < hlWins.length; i++) {
+            var w = hlWins[i];
+            if (!w) continue;
+            var ipc = w.lastIpcObject || {};
+            var cls = String(ipc["class"] || "").toLowerCase();
+            if (cls === "org.quickshell" || cls === "quickshell" || cls === "") continue;
+
+            var wsId = (w.workspace && w.workspace.id !== undefined) ? w.workspace.id : (ipc.workspace ? ipc.workspace.id : 1);
+            var addr = String(ipc.address || w.address || "");
+            if (addr && !addr.startsWith("0x")) addr = "0x" + addr;
+
+            list.push({
+                title: ipc.title || w.title || "Window",
+                appId: ipc["class"] || ipc.initialClass || "app",
+                workspaceId: wsId,
+                address: addr,
+                wayland: w.wayland,
+                raw: w
+            });
+        }
+        if (list.length > 0) return list;
+
+        // Fallback to ToplevelManager if Hyprland.toplevels is empty
+        var tops = (ToplevelManager.toplevels && ToplevelManager.toplevels.values) ? ToplevelManager.toplevels.values : [];
+        return (tops || []).filter(function(t) {
             if (!t) return false;
             var id = String(t.appId || "").toLowerCase();
-            if (id === "org.quickshell" || id === "quickshell" || id === "") return false;
-            return true;
+            return (id !== "org.quickshell" && id !== "quickshell" && id !== "");
+        }).map(function(t) {
+            return {
+                title: t.title || t.appId || "Window",
+                appId: t.appId || "app",
+                workspaceId: 1,
+                address: "",
+                wayland: t,
+                raw: t
+            };
         });
     }
 
@@ -101,7 +134,8 @@ PanelWindow {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            Hyprland.dispatch("workspace " + wsId);
+                            Hyprland.dispatch("hl.dsp.focus({ workspace = " + wsId + " })");
+                            ShellController.missionControlOpen = false;
                         }
                     }
                 }
@@ -178,19 +212,10 @@ PanelWindow {
 
                                 // Close Button
                                 Rectangle {
-                                    width: 14
-                                    height: 14
-                                    radius: 7
-                                    color: closeMouse.containsMouse ? "#ff453a" : Qt.rgba(1, 0.3, 0.3, 0.8)
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "\u00D7"
-                                        font.pixelSize: 11
-                                        font.bold: true
-                                        color: "#ffffff"
-                                        visible: closeMouse.containsMouse
-                                    }
+                                    width: 12
+                                    height: 12
+                                    radius: 6
+                                    color: closeMouse.containsMouse ? "#ff5f56" : Qt.rgba(255, 95, 86, 0.7)
 
                                     MouseArea {
                                         id: closeMouse
@@ -199,8 +224,10 @@ PanelWindow {
                                         cursorShape: Qt.PointingHandCursor
                                         z: 10
                                         onClicked: {
-                                            if (card.modelData && typeof card.modelData.close === "function") {
-                                                card.modelData.close();
+                                            if (card.modelData && card.modelData.address) {
+                                                Hyprland.dispatch("hl.dsp.window.close({ window = \"address:" + card.modelData.address + "\" })");
+                                            } else if (card.modelData && card.modelData.raw && typeof card.modelData.raw.close === "function") {
+                                                card.modelData.raw.close();
                                             }
                                         }
                                     }
@@ -225,6 +252,17 @@ PanelWindow {
                                         weight: Font.DemiBold
                                     }
                                     color: "#ffffff"
+                                }
+
+                                // Workspace Badge
+                                Text {
+                                    visible: !!card.modelData.workspaceId && card.modelData.workspaceId > 0
+                                    text: "Desktop " + card.modelData.workspaceId
+                                    font {
+                                        family: Appearance.fontFamily
+                                        pixelSize: 10
+                                    }
+                                    color: Qt.rgba(255, 255, 255, 0.45)
                                 }
                             }
                         }
@@ -265,9 +303,24 @@ PanelWindow {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                if (card.modelData && typeof card.modelData.activate === "function") {
-                                    card.modelData.activate();
+                                var item = card.modelData;
+                                if (!item) return;
+
+                                if (item.workspaceId !== undefined && item.workspaceId > 0) {
+                                    Hyprland.dispatch("hl.dsp.focus({ workspace = " + item.workspaceId + " })");
                                 }
+
+                                if (item.address) {
+                                    Hyprland.dispatch("hl.dsp.focus({ window = \"address:" + item.address + "\" })");
+                                    Hyprland.dispatch("hl.dsp.window.alter_zorder({ mode = \"top\" })");
+                                }
+
+                                if (item.wayland && typeof item.wayland.activate === "function") {
+                                    item.wayland.activate();
+                                } else if (item.raw && typeof item.raw.activate === "function") {
+                                    item.raw.activate();
+                                }
+
                                 ShellController.missionControlOpen = false;
                             }
                         }
