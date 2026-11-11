@@ -224,17 +224,21 @@ QVariantList ShellCtl::listImages(const QString &dir)
     for (const QString &f : files) {
         const QFileInfo fi(f);
         const QString suf = fi.suffix().toLower();
-        QImageReader r(f);
-        r.setAutoTransform(true);
-        const QSize sz = r.size();
+        const bool isMovie = movie.contains(suf);
+        QSize sz(1920, 1080);
+        bool isAnim = isMovie;
+        if (!isMovie) {
+            QImageReader r(f);
+            sz = r.size();
+            isAnim = (suf == QStringLiteral("gif")) || r.supportsAnimation();
+        }
         QVariantMap m;
         m.insert(QStringLiteral("path"), f);
         m.insert(QStringLiteral("name"), fi.completeBaseName());
         m.insert(QStringLiteral("ext"), suf);
-        m.insert(QStringLiteral("w"), sz.isValid() ? sz.width() : 0);
-        m.insert(QStringLiteral("h"), sz.isValid() ? sz.height() : 0);
-        m.insert(QStringLiteral("animated"),
-                 movie.contains(suf) || r.supportsAnimation());
+        m.insert(QStringLiteral("w"), sz.isValid() && sz.width() > 0 ? sz.width() : 1920);
+        m.insert(QStringLiteral("h"), sz.isValid() && sz.height() > 0 ? sz.height() : 1080);
+        m.insert(QStringLiteral("animated"), isAnim);
         m.insert(QStringLiteral("mtime"), fi.lastModified().toSecsSinceEpoch());
         out.append(m);
     }

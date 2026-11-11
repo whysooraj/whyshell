@@ -107,7 +107,7 @@ PanelWindow {
     function buildScanCmd() {
         return ["bash", "-c",
             "D=\"${XDG_CONFIG_HOME:-$HOME/.config}/wallpapers\"; " +
-            "find \"$D\" -maxdepth 1 -type f -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.gif' " +
+            "find -L \"$D\" -maxdepth 1 -type f \\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.gif' \\) " +
             "-printf '%T@\\t%p\\n' 2>/dev/null | sort -rn | head -200 | cut -f2- | " +
             "while IFS= read -r f; do k=$(printf '%s' \"$f\" | md5sum | cut -d' ' -f1); m=$(stat -c %Y \"$f\" 2>/dev/null); printf '%s\\t%s/%s-%s.jpg\\n' \"$f\" \"$HOME/.cache/quickshell-img-thumbs\" \"$k\" \"$m\"; done"]
     }
@@ -193,7 +193,7 @@ PanelWindow {
             "W=" + shq(path) + "; " +
             "awww img --transition-type center --transition-step 90 \"$W\" && " +
             "matugen image \"$W\" --source-color-index 0 && " +
-            "bash ~/.config/hypr/scripts/quickshell/wallpaper/matugen_reload.sh"])
+            "bash /home/whysooraj/.config/revo/hypr/scripts/quickshell/wallpaper/matugen_reload.sh"])
         panel.close()
     }
 

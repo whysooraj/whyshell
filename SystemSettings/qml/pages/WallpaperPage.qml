@@ -34,6 +34,10 @@ Column {
         var out = []
         var roots = [HOME_DIR + "/Pictures/Wallpapers",
                      HOME_DIR + "/Pictures",
+                     HOME_DIR + "/.local/share/wallpapers/MacTahoe/contents/images",
+                     HOME_DIR + "/.local/share/wallpapers/MacTahoe-Dark/contents/images",
+                     HOME_DIR + "/.local/share/wallpapers/MacTahoe-Light/contents/images",
+                     HOME_DIR + "/.config/wallpapers",
                      Shell.eget("wallpaper.folder", "").toString().replace(/^file:\/\//, "").replace(/\/$/, ""),
                      HOME_DIR + "/.local/share/equora/wallpapers"]
         var seen = {}
@@ -51,7 +55,11 @@ Column {
 
     function build() {
         var roots = [HOME_DIR + "/Pictures/Wallpapers",
+                     HOME_DIR + "/.local/share/wallpapers/MacTahoe/contents/images",
+                     HOME_DIR + "/.local/share/wallpapers/MacTahoe-Dark/contents/images",
+                     HOME_DIR + "/.local/share/wallpapers/MacTahoe-Light/contents/images",
                      Shell.eget("wallpaper.folder", "").toString().replace(/^file:\/\//, "").replace(/\/$/, ""),
+                     HOME_DIR + "/Pictures",
                      HOME_DIR + "/.local/share/equora/wallpapers"]
         var seen = {}
         var all = []
@@ -70,8 +78,8 @@ Column {
             var m = all[k]
             if (m.animated === true) { if (d.length < cap) d.push(m); continue }
             if (p.length < cap) p.push(m)
-            if (m.w > m.h * 1.05) { if (w.length < cap) w.push(m) }
-            else if (m.h > m.w * 1.05) { if (t.length < cap) t.push(m) }
+            if (m.w >= m.h) { if (w.length < cap) w.push(m) }
+            else if (m.h > m.w) { if (t.length < cap) t.push(m) }
         }
         allImgs = all
         dyn = d
@@ -96,27 +104,38 @@ Column {
     }
 
     readonly property string current: {
+        bumpU
         bumpE
-        var p = String(eget("wallpaper.path", ""))
+        var p = String(uget("wallpaperPath", ""))
         if (p.length > 0)
             return p
+        p = String(eget("wallpaper.path", ""))
+        if (p.length > 0)
+            return p
+        var active = Shell.execOut("awww query 2>/dev/null | grep -o '/.*' | head -n1")
+        if (active && active.length > 0)
+            return active
         if (photos.length > 0)
             return photos[0].path
         return ""
     }
 
     function apply(path) {
+        if (!path) return
+        Shell.uset("wallpaperPath", path)
         Shell.eset("wallpaper.path", path)
         Shell.eset("wallpaper.folder", "file://" + path.split("/").slice(0, -1).join("/") + "/")
-        Shell.ipc("wallpaper", "change", [path])
+        Shell.run("pgrep -x awww-daemon >/dev/null || awww-daemon & sleep 0.2; awww img --transition-type center --transition-step 90 '" + path.replace(/'/g, "'\\''") + "'")
+        Shell.run("bash " + HOME_DIR + "/.config/revo/hypr/scripts/wallpapers/set.sh '" + path.replace(/'/g, "'\\''") + "'")
         rev++
         build()
     }
 
     function applyColor(c) {
+        Shell.uset("wallpaperPath", "")
         Shell.eset("wallpaper.color", c)
         Shell.eset("wallpaper.path", "")
-        Shell.ipc("wallpaper", "change", [c])
+        Shell.run("magick -size 1920x1080 xc:'" + c + "' /tmp/solid_wall.png && pgrep -x awww-daemon >/dev/null || awww-daemon & sleep 0.2; awww img --transition-type center /tmp/solid_wall.png")
         rev++
     }
 
