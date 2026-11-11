@@ -55,6 +55,8 @@ map_mac() {
         visualstudio*) echo "Xcode"; return 0 ;;
         zed|zedzed|zeditor|*zed*) echo "Zed"; return 0 ;;
         lastwave*|*lastwave*) echo "lastwave"; return 0 ;;
+        helium*|*helium*) echo "helium-browser"; return 0 ;;
+        zap*|*zap*) echo "zapfast"; return 0 ;;
         kitty|konsole|console|alacritty|gnometerminal|wezterm|tilix) echo "Terminal"; return 0 ;;
         gwenview|shotwell|eom|loupe)                 echo "Photos"; return 0 ;;
         geary|thunderbird|evolution|mailspring)      echo "Mail"; return 0 ;;

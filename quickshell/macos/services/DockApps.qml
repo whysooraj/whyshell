@@ -23,6 +23,8 @@ Singleton {
         { name: "Google Chrome", icon: "google-chrome.png", desktop: "google-chrome", exec: "google-chrome-stable", appIds: ["google-chrome", "google-chrome-stable"] },
         { name: "VS Code", icon: "code.png", desktop: "code-oss", exec: "code", appIds: ["code-oss", "code", "com.visualstudio.code"] },
         { name: "Terminal", icon: "Terminal.png", desktop: "kitty", exec: "kitty", appIds: ["kitty", "ghostty"] },
+        { name: "Zed", icon: "Zed.png", desktop: "dev.zed.Zed", exec: "zeditor", appIds: ["dev.zed.Zed", "zed", "Zed", "zeditor"] },
+        { name: "LastWave", icon: "lastwave.png", desktop: "lastwave", exec: "/opt/lastwave/lastwave_desktop", appIds: ["lastwave_desktop", "lastwave", "com.lastwave.lastwave_desktop", "LastWave"] },
         { name: "Telegram", icon: "Telegram.png", desktop: "org.telegram.desktop", exec: "telegram-desktop", appIds: ["org.telegram.desktop", "telegram-desktop"] },
         { name: "Steam", icon: "Steam.png", desktop: "steam", exec: "steam", appIds: ["steam", "com.valvesoftware.Steam"] },
         { name: "System Settings", icon: "System Settings.png", desktop: "systemsettings", exec: "systemsettings", appIds: ["systemsettings", "macos-settings", "pearos-settings", "pearos-settings-app"] },
@@ -189,18 +191,21 @@ Singleton {
         for (const p of root.pinned) {
             if (p.appIds && (p.appIds[0] === targetId || p.appIds.includes(targetId))) return;
         }
-        const iconVal = app.icon || (root._iconCache[targetId] ? root._iconCache[targetId] : (app.name + ".png"));
+        var iconVal = app.icon;
+        if (!iconVal || iconVal === "Placeholder.png") {
+            iconVal = root._iconCache[targetId] || root.iconForClass(targetId) || (app.name + ".png");
+        }
         const newPinned = root.pinned.slice();
         newPinned.push({
             name: app.name || targetId,
             icon: iconVal,
-            desktop: app.desktop || "",
+            desktop: app.desktop || targetId,
             exec: app.exec || targetId,
             appIds: app.appIds || [targetId]
         });
         root.pinned = newPinned;
         // Remove from running apps if present
-        root.runningApps = root.runningApps.filter(r => !r.appIds || r.appIds[0] !== targetId);
+        root.runningApps = root.runningApps.filter(r => !r.appIds || !r.appIds.includes(targetId));
         root.savePinned();
     }
 
@@ -459,14 +464,8 @@ Singleton {
         root._iconBusy = false;
         const path = text.trim();
         if (path) {
-            for (const item of root.runningApps) {
-                const it = item.appIds[0];
-                if (root._iconCache[it] === null && path) {
-                    root._iconCache[it] = "file://" + path;
-                    root.runningApps = root._buildExtras();
-                    break;
-                }
-            }
+            root._iconCache[id] = path.startsWith("file://") ? path : ("file://" + path);
+            root.runningApps = root._buildExtras();
         } else {
             root._iconCache[id] = "";
         }
