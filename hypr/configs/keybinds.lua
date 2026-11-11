@@ -26,7 +26,6 @@ local mainMod = "SUPER"
 
 -- Terminal
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + enter", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
 
 -- App launchers & menus
@@ -107,11 +106,8 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 5%-"), { locke
 
 -- Screenshots
 hl.bind("Print", hl.dsp.exec_cmd("grimblast --notify copysave output"))
-hl.bind("PRINT", hl.dsp.exec_cmd("grimblast --notify copysave output"))
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd("grimblast --notify copysave area"))
-hl.bind("SHIFT + PRINT", hl.dsp.exec_cmd("grimblast --notify copysave area"))
 hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("grimblast --notify copysave active"))
-hl.bind(mainMod .. " + PRINT", hl.dsp.exec_cmd("grimblast --notify copysave active"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("grimblast --notify copysave area"))
 hl.bind(mainMod .. " + minus", hl.dsp.exec_cmd("grimblast --notify copysave active"))
 hl.bind(shiftMod .. " + K", hl.dsp.exec_cmd("grimblast --notify copysave area"))
