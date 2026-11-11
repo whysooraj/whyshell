@@ -93,6 +93,35 @@ Column {
     property string lgWallpaper: ""
     property bool lgWallpaperDone: false
 
+    property var hypr: ({
+        gaps_in: 6,
+        gaps_out: 10,
+        border_size: 0,
+        rounding: 12,
+        active_opacity: 0.95,
+        inactive_opacity: 0.88,
+        blur_enabled: true,
+        shadow_enabled: true,
+        active_border: "rgba(ffffff15)",
+        inactive_border: "rgba(00000000)"
+    })
+
+    function refreshHypr() {
+        var out = Shell.execOut("python3 " + HOME_DIR + "/.config/revo/hypr/scripts/hypr_settings.py get")
+        try {
+            if (out && out.length > 0) {
+                var d = JSON.parse(out)
+                hypr = d
+            }
+        } catch (e) {}
+    }
+
+    function setHypr(k, v) {
+        Shell.run("python3 " + HOME_DIR + "/.config/revo/hypr/scripts/hypr_settings.py set " + k + " '" + v + "'")
+        hypr[k] = v
+        rev++
+    }
+
     function lgFill(mode) {
         var i = lgIntensity
         if (mode === "Tinted") {
@@ -168,6 +197,7 @@ Column {
     }
 
     Component.onCompleted: {
+        page.refreshHypr()
         var p = String(ecfg("wallpaper.path", "") || "")
         if (p.length > 0 && !p.startsWith("file://"))
             p = "file://" + p
@@ -951,6 +981,139 @@ Column {
             showSwitch: true
             switchOn: ecfg("general.reduceMotion", false) === true
             onToggled: (c) => { Shell.eset("general.reduceMotion", c); Shell.uset("reduceMotion", c) }
+        }
+    }
+
+    Item { width: 1; height: 4 }
+
+    SectionHeader { text: "Window Styling & Hyprland" }
+
+    GroupCard {
+        DetailRow {
+            title: "Corner Rounding"
+            subtitle: (page.hypr.rounding !== undefined ? page.hypr.rounding : 12) + " px"
+            isSlider: true
+            sliderValue: (page.hypr.rounding !== undefined ? page.hypr.rounding : 12) / 30
+            onMoved: (r) => {
+                var v = Math.round(r * 30)
+                page.setHypr("rounding", v)
+            }
+        }
+
+        DetailRow {
+            separator: true
+            title: "Window Border Width"
+            subtitle: (page.hypr.border_size !== undefined ? page.hypr.border_size : 0) + " px"
+            isSlider: true
+            sliderValue: (page.hypr.border_size !== undefined ? page.hypr.border_size : 0) / 8
+            onMoved: (r) => {
+                var v = Math.round(r * 8)
+                page.setHypr("border_size", v)
+            }
+        }
+
+        DetailRow {
+            separator: true
+            title: "Active Border Colour"
+            pickerOptions: ["Subtle White", "Accent Blue", "Purple Indigo", "Emerald Green", "Sunset Orange", "Rose Pink", "None"]
+            value: {
+                var b = String(page.hypr.active_border || "")
+                if (b.indexOf("0a84ff") >= 0 || b.indexOf("315bdc") >= 0) return "Accent Blue"
+                if (b.indexOf("a550de") >= 0) return "Purple Indigo"
+                if (b.indexOf("34c759") >= 0 || b.indexOf("62ba46") >= 0) return "Emerald Green"
+                if (b.indexOf("ff9500") >= 0 || b.indexOf("f56300") >= 0) return "Sunset Orange"
+                if (b.indexOf("ff2d55") >= 0 || b.indexOf("f43ea5") >= 0) return "Rose Pink"
+                if (page.hypr.border_size === 0) return "None"
+                return "Subtle White"
+            }
+            onPicked: (v) => {
+                var colorMap = {
+                    "Subtle White": "rgba(ffffff25)",
+                    "Accent Blue": "rgba(0a84ffee)",
+                    "Purple Indigo": "rgba(a550deee)",
+                    "Emerald Green": "rgba(34c759ee)",
+                    "Sunset Orange": "rgba(ff9500ee)",
+                    "Rose Pink": "rgba(ff2d55ee)",
+                    "None": "rgba(00000000)"
+                }
+                var c = colorMap[v] || "rgba(ffffff25)"
+                page.setHypr("active_border", c)
+                if (v === "None") {
+                    page.setHypr("border_size", 0)
+                } else if (page.hypr.border_size === 0) {
+                    page.setHypr("border_size", 2)
+                }
+            }
+        }
+
+        DetailRow {
+            separator: true
+            title: "Inner Window Gaps"
+            subtitle: (page.hypr.gaps_in !== undefined ? page.hypr.gaps_in : 6) + " px"
+            isSlider: true
+            sliderValue: (page.hypr.gaps_in !== undefined ? page.hypr.gaps_in : 6) / 30
+            onMoved: (r) => {
+                var v = Math.round(r * 30)
+                page.setHypr("gaps_in", v)
+            }
+        }
+
+        DetailRow {
+            separator: true
+            title: "Outer Screen Gaps"
+            subtitle: (page.hypr.gaps_out !== undefined ? page.hypr.gaps_out : 10) + " px"
+            isSlider: true
+            sliderValue: (page.hypr.gaps_out !== undefined ? page.hypr.gaps_out : 10) / 40
+            onMoved: (r) => {
+                var v = Math.round(r * 40)
+                page.setHypr("gaps_out", v)
+            }
+        }
+
+        DetailRow {
+            separator: true
+            title: "Active Window Opacity"
+            subtitle: Math.round((page.hypr.active_opacity !== undefined ? page.hypr.active_opacity : 0.95) * 100) + "%"
+            isSlider: true
+            sliderValue: Math.max(0, Math.min(1, ((page.hypr.active_opacity !== undefined ? page.hypr.active_opacity : 0.95) - 0.5) / 0.5))
+            onMoved: (r) => {
+                var v = Number((0.5 + r * 0.5).toFixed(2))
+                page.setHypr("active_opacity", v)
+            }
+        }
+
+        DetailRow {
+            separator: true
+            title: "Inactive Window Opacity"
+            subtitle: Math.round((page.hypr.inactive_opacity !== undefined ? page.hypr.inactive_opacity : 0.88) * 100) + "%"
+            isSlider: true
+            sliderValue: Math.max(0, Math.min(1, ((page.hypr.inactive_opacity !== undefined ? page.hypr.inactive_opacity : 0.88) - 0.5) / 0.5))
+            onMoved: (r) => {
+                var v = Number((0.5 + r * 0.5).toFixed(2))
+                page.setHypr("inactive_opacity", v)
+            }
+        }
+
+        DetailRow {
+            separator: true
+            title: "Window Background Blur"
+            subtitle: "Smooth compositor blur behind windows"
+            showSwitch: true
+            switchOn: page.hypr.blur_enabled !== false
+            onToggled: (c) => {
+                page.setHypr("blur_enabled", c ? "true" : "false")
+            }
+        }
+
+        DetailRow {
+            separator: true
+            title: "Window Drop Shadows"
+            subtitle: "macOS-like drop shadows around windows"
+            showSwitch: true
+            switchOn: page.hypr.shadow_enabled !== false
+            onToggled: (c) => {
+                page.setHypr("shadow_enabled", c ? "true" : "false")
+            }
         }
     }
 

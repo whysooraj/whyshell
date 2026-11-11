@@ -53,6 +53,7 @@ Singleton {
         else if (name === "controlcenter") root.controlCenterOpen = !currentlyOpen;
         else if (name === "session") root.sessionOpen = !currentlyOpen;
         else if (name === "notifications") root.notificationsOpen = !currentlyOpen;
+        else if (name === "settings") Apps.launch("systemsettings");
     }
 
     function openForceQuit() {
@@ -161,7 +162,7 @@ Singleton {
             onStreamFinished: {
                 _cmdProc.running = false;
                 const cmd = text.trim();
-                if (cmd && cmd !== root.lastCmd) { root.lastCmd = cmd; root.handleCommand(cmd); }
+                if (cmd) { root.handleCommand(cmd); }
             }
         }
     }

@@ -3,14 +3,14 @@ import QtQuick
 QtObject {
     id: theme
 
-    readonly property bool dark: Shell.userCfg && Shell.userCfg["darkMode"] === true
+    readonly property bool dark: (typeof Shell !== "undefined" && Shell && Shell.userCfg && Shell.userCfg["darkMode"] === true)
 
-    readonly property color accent: (Shell.userCfg && Shell.userCfg["accentColor"]) ? Shell.userCfg["accentColor"] : "#0A84FF"
+    readonly property color accent: (typeof Shell !== "undefined" && Shell && Shell.userCfg && Shell.userCfg["accentColor"]) ? Shell.userCfg["accentColor"] : "#0A84FF"
     readonly property color accentPressed: "#2688FF"
-    readonly property color link: (Shell.userCfg && Shell.userCfg["highlightColor"]) ? Shell.userCfg["highlightColor"] : "#0A6CFF"
+    readonly property color link: (typeof Shell !== "undefined" && Shell && Shell.userCfg && Shell.userCfg["highlightColor"]) ? Shell.userCfg["highlightColor"] : "#0A6CFF"
 
     readonly property int sidebarIconSize: {
-        var a = (Shell.userCfg && Shell.userCfg["appearance"]) ? Shell.userCfg["appearance"] : null
+        var a = (typeof Shell !== "undefined" && Shell && Shell.userCfg && Shell.userCfg["appearance"]) ? Shell.userCfg["appearance"] : null
         var m = a ? a["sidebarIconSize"] : undefined
         return m === "Small" ? 20 : (m === "Large" ? 28 : 24)
     }

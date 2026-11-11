@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
                          QCoreApplication::exit(-1);
                      }, Qt::QueuedConnection);
 
-    engine.loadFromModule("org.macos.systemsettings", "Main");
+    engine.load(QUrl(QStringLiteral("qrc:/org/macos/systemsettings/qml/Main.qml")));
 
     if (engine.rootObjects().isEmpty()) {
         qWarning() << "QML: rootObjects empty after loadFromModule";

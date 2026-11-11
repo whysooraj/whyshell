@@ -38,6 +38,7 @@ qt_add_resources(systemsettings "icons"
 qt_add_qml_module(systemsettings
     URI org.macos.systemsettings
     VERSION 1.0
+    RESOURCE_PREFIX "/"
     QML_FILES
         qml/Main.qml
         qml/Pages.js

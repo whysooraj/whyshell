@@ -117,7 +117,7 @@ hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/show
 hl.bind(mainMod .. " + Z", hl.dsp.exec_cmd("zen-browser"))
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("bash -c 'echo powermenu > ${XDG_RUNTIME_DIR}/skwd/cmd'"))
 hl.bind(mainMod .. " + N", hl.dsp.global("quickshell:wallpaperSelectorToggle"))
-hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/qs_manager.sh toggle settings"))
+hl.bind(mainMod .. " + I", hl.dsp.exec_cmd("systemsettings"))
 hl.bind(mainMod .. " + O", hl.dsp.exec_cmd(hypr_dir .. "/scripts/qs_manager.sh toggle movies"))
 hl.bind(mainMod .. " + J", hl.dsp.exec_cmd(hypr_dir .. "/scripts/qs_manager.sh toggle anime"))
 hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/qs_manager.sh toggle focustime"))
