@@ -1,7 +1,11 @@
 #!/bin/bash
 set -eu
 
-WALL=$1
+WALL="${1:-}"
+if [[ -z "$WALL" || ! -f "$WALL" ]]; then
+    echo "No valid wallpaper supplied: '$WALL'" >&2
+    exit 1
+fi
 
 awww img --transition-type center --transition-step 90 "$WALL"
 echo "Wallpaper set successfully"

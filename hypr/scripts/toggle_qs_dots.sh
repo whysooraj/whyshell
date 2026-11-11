@@ -54,6 +54,17 @@ start_dot() {
     local target="$1"
     stop_all_quickshell
 
+    local runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+    local wayland_disp="${WAYLAND_DISPLAY:-wayland-1}"
+    for _ in $(seq 1 50); do
+        if [[ -S "$runtime/$wayland_disp" ]]; then
+            break
+        fi
+        sleep 0.1
+    done
+    export WAYLAND_DISPLAY="$wayland_disp"
+    export QT_QPA_PLATFORM=wayland
+
     if [[ "$target" == "default" ]]; then
         if [[ -f "$HYPR_QS/Main.qml" ]]; then
             setsid -f quickshell -p "$HYPR_QS/Main.qml" >/dev/null 2>&1
@@ -86,7 +97,7 @@ start_dot() {
             elif [[ -d "$QS_BASE/$target/api" ]]; then
                 env_prefix="QML2_IMPORT_PATH=$QS_BASE/$target/api "
             fi
-            setsid -f bash -c "export WAYLAND_DISPLAY=\"\${WAYLAND_DISPLAY:-wayland-1}\" QT_QPA_PLATFORM=wayland; ${env_prefix}quickshell -p $QS_BASE/$target/shell.qml" >"$HOME/${target}.log" 2>&1
+            setsid -f bash -c "${env_prefix}quickshell -p $QS_BASE/$target/shell.qml" >"$HOME/${target}.log" 2>&1
         fi
     fi
 }
