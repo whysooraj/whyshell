@@ -4,15 +4,16 @@ import QtQuick.Window
 Item {
     id: cell
 
-    property bool signedIn: false
+    property bool signedIn: true
     property string accountName: ""
+    property string accountSub: ""
     property bool selected: false
     readonly property bool highlighted: selected && cell.Window.window && cell.Window.window.active
 
     signal clicked
 
     width: parent ? parent.width : 200
-    height: 44
+    height: 48
 
     Rectangle {
         anchors.fill: parent
@@ -26,10 +27,10 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
         anchors.leftMargin: 16
-        spacing: 8
+        spacing: 10
 
         Avatar {
-            size: 32
+            size: 34
             avatarPath: { var m = Shell.userCfg; return String(Shell.uget("avatarPath", "")) }
             anchors.verticalCenter: parent.verticalCenter
         }
@@ -39,7 +40,7 @@ Item {
             spacing: 1
 
             Text {
-                text: cell.signedIn ? cell.accountName : "Sign in"
+                text: cell.accountName.length > 0 ? cell.accountName : "User"
                 font.family: Theme.fontText
                 font.pixelSize: 13
                 font.weight: Font.DemiBold
@@ -49,14 +50,13 @@ Item {
             }
 
             Text {
-                text: cell.signedIn ? "Apple Account" : "with your Apple Account"
+                text: cell.accountSub.length > 0 ? cell.accountSub : "Local Account"
                 font.family: Theme.fontText
-                font.pixelSize: 12
+                font.pixelSize: 11
                 color: cell.highlighted ? Qt.rgba(1, 1, 1, 0.85) : Theme.textSecondary
                 width: 150
                 elide: Text.ElideRight
-                maximumLineCount: 2
-                wrapMode: Text.WordWrap
+                maximumLineCount: 1
             }
         }
     }

@@ -9,8 +9,9 @@ Rectangle {
 
     property string selectedId: "general"
     property bool hasBattery: true
-    property bool signedIn: false
+    property bool signedIn: true
     property string accountName: ""
+    property string accountSub: ""
     property alias searchText: searchInput.text
 
     signal select(string rowId)
@@ -168,6 +169,7 @@ Rectangle {
                 width: parent.width
                 signedIn: sidebar.signedIn
                 accountName: sidebar.accountName
+                accountSub: sidebar.accountSub
                 selected: sidebar.selectedId === "appleId"
                 onClicked: sidebar.signIn()
             }

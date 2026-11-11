@@ -49,11 +49,14 @@ ApplicationWindow {
         }
     }
 
+    readonly property string systemUser: (typeof Shell !== "undefined" && Shell) ? Shell.execOut("whoami", 500).trim() : "User"
+    readonly property string systemHost: (typeof Shell !== "undefined" && Shell) ? Shell.execOut("hostname", 500).trim() : "Linux"
+
     Settings {
         id: accountStore
         category: "account"
-        property string email: ""
-        property string name: ""
+        property string email: root.systemUser + "@" + root.systemHost
+        property string name: root.systemUser
     }
 
     font.family: Theme.fontText
@@ -71,8 +74,9 @@ ApplicationWindow {
             Layout.fillHeight: true
             selectedId: root.selectedId
             hasBattery: root.hasBattery
-            signedIn: accountStore.email.length > 0
-            accountName: accountStore.name
+            signedIn: true
+            accountName: accountStore.name.length > 0 ? accountStore.name : root.systemUser
+            accountSub: accountStore.email.length > 0 ? accountStore.email : (root.systemUser + "@" + root.systemHost)
             onSelect: (id) => root.selectedId = id
             onSignIn: root.selectedId = "appleId"
         }

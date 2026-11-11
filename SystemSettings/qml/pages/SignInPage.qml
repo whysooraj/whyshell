@@ -344,7 +344,7 @@ Column {
         GroupCard {
             DetailRow {
                 title: "Account Photo"
-                subtitle: "Use your own picture for this Apple Account."
+                subtitle: "Use your own picture for this user account."
                 value: page.avatarPath.length > 0 ? "Custom" : "Default"
                 pickerOptions: ["Default", "Choose Image\u2026"]
                 onPicked: (v) => {

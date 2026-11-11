@@ -24,8 +24,12 @@ Rectangle {
     }
     width: parent ? parent.width-20 : 0
     height: 50
-    radius: 15
-    color: "transparent"
+    radius: 12
+    color: (root.hovered || ListView.isCurrentItem) ? (Config.general.darkMode ? "#30ffffff" : "#18000000") : "transparent"
+
+    Behavior on color {
+        ColorAnimation { duration: 120 }
+    }
 
     property bool hovered: false
     property bool hasDescription: modelData.description != ""
@@ -92,8 +96,11 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onEntered: parent.hovered = true
+        onEntered: {
+            parent.hovered = true
+            if (ListView.view) ListView.view.currentIndex = root.index
+        }
         onExited: parent.hovered = false
-        onClicked: (mouse) => {root.clicked(mouse)}
+        onClicked: (mouse) => { root.clicked(mouse) }
     }
 }

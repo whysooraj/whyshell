@@ -17,7 +17,9 @@ Item {
     id: root
     signal actionClicked()
     function keyPressed(event: var) {
-        loader.item.keyPressed(event)
+        if (loader && loader.item && typeof loader.item.keyPressed === "function") {
+            loader.item.keyPressed(event)
+        }
     }
     property string text: ""
     required property string selectedAction
@@ -65,7 +67,7 @@ Item {
         height: 2
         radius: 2
         color: "#40555555"
-        visible: root.selectedAction != ""
+        visible: false
     }
     CFClippingRect {
         id: clippingRect

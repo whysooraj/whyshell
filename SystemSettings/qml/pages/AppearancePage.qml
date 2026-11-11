@@ -543,7 +543,7 @@ Column {
                             color: "#ffffff"
                         }
                         Text {
-                            text: "احصل على دليل الزائر"
+                            text: "Visitor Center Guide"
                             font { family: Theme.fontText; pixelSize: 10 }
                             color: Qt.rgba(1, 1, 1, 0.75)
                         }
@@ -564,7 +564,7 @@ Column {
                         Text {
                             x: 14
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "بحث"
+                            text: "Search"
                             font { family: Theme.fontText; pixelSize: 12 }
                             color: "#ffffff"
                         }

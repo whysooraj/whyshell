@@ -175,7 +175,7 @@ Scope {
                 visible: true
                 opacity: 0
                 width: root.collapsedWidth + (root.expandedWidth - root.collapsedWidth) * Rail.pill(root.railProgress)
-                height: searchRow.height + (results.height > 0 ? results.height + 8 : 0)
+                height: searchRow.height + (results.height > 0 ? results.height + 8 + 12 : 0)
                 property real scaleX: 1
                 transform: Scale {
                     xScale: panel.scaleX
@@ -422,7 +422,7 @@ Scope {
                 BoxGlass {
                     id: body
                     x: 0
-                    y: searchRow.height
+                    y: searchRow.height + 12
                     width: root.collapsedWidth
                     height: results.height > 0 ? results.height + 8 : 0
                     visible: height > 0

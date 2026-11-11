@@ -9,7 +9,14 @@ Item {
 
     signal editClicked
 
-    readonly property bool customReady: avatarPath.length > 0 && customImg.status === Image.Ready
+    property bool loadFailed: false
+    readonly property string effectiveAvatar: {
+        if (!loadFailed && avatarPath && avatarPath.length > 0) return avatarPath;
+        var face = (typeof HOME_DIR !== "undefined" ? HOME_DIR : "") + "/.face";
+        return face;
+    }
+
+    readonly property bool customReady: effectiveAvatar.length > 0 && customImg.status === Image.Ready
 
     width: size
     height: size
@@ -27,12 +34,17 @@ Item {
         Image {
             id: customImg
             anchors.fill: parent
-            source: root.avatarPath.length > 0 ? "file://" + root.avatarPath : ""
+            source: root.effectiveAvatar.length > 0 ? "file://" + root.effectiveAvatar : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             cache: false
             sourceSize.width: root.size * 2
             sourceSize.height: root.size * 2
+            onStatusChanged: {
+                if (status === Image.Error && root.avatarPath.length > 0 && !root.loadFailed) {
+                    root.loadFailed = true;
+                }
+            }
         }
     }
 
