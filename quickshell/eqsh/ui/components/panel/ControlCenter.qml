@@ -41,6 +41,7 @@ Scope {
     signal openBluetooth()
     signal openWifi()
     signal close()
+    signal requestLock()
     property bool bluetoothOpened: false
     property bool wifiOpened: false
     property bool windowOpened: bluetoothOpened || wifiOpened
@@ -55,11 +56,17 @@ Scope {
         return n;
     }
     function refreshVoice() { voicePoll.running = true; }
+
+    Process {
+        id: _lockProc
+        running: false
+        command: ["bash", "-c", "echo lock > /tmp/macos_cmd || bash /home/whysooraj/.config/revo/hypr/scripts/macos_lock.sh"]
+    }
+
     function doLock() {
-        try {
-            if (typeof ShellController !== "undefined") { ShellController.lock(); return; }
-        } catch (e) {}
-        if (typeof Ipc !== "undefined") Ipc.runMixin("eqdesktop.lock", "lock");
+        panelWindow.opened = false;
+        root.requestLock();
+        _lockProc.running = true;
     }
     function doPower() {
         try {
@@ -164,7 +171,7 @@ Scope {
         property int box: 65
         property int boxMargin: 10
         property int gridW: 4
-        property int gridH: 7
+        property int gridH: 6
         property int gridImplicitWidth: ((box*gridW)+(boxMargin*gridW)+boxMargin)
         property int gridImplicitHeight: ((box*gridH)+(boxMargin*gridH)+boxMargin)
 
@@ -1038,6 +1045,7 @@ Scope {
                 }
                 BoxButton {
                     id: settingsWidget
+                    visible: false
                     width: settingsLabel.implicitWidth + 40
                     height: 46
                     radius: 40

@@ -26,5 +26,8 @@ Scope {
             if (ShellController.controlCenterOpen !== cc.opened)
                 ShellController.controlCenterOpen = cc.opened;
         }
+        function onRequestLock() {
+            ShellController.action("lock");
+        }
     }
 }
