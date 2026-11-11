@@ -1,4 +1,6 @@
 import QtQuick
+import QtQuick.Controls
+import QtQuick.Dialogs
 import ".."
 import "../Pages.js" as Pages
 
@@ -24,69 +26,132 @@ Column {
     readonly property string idlePath: HOME_DIR + "/.config/hypr/hypridle.conf"
     readonly property string lockPath: HOME_DIR + "/.config/hypr/hyprlock.conf"
 
+    readonly property var wallpaperPresets: ({
+        "macOS Sonoma (Light)": HOME_DIR + "/Pictures/Wallpapers/14-Sonoma-Light.jpg",
+        "macOS Sonoma (Dark)": HOME_DIR + "/Pictures/Wallpapers/14-Sonoma-Dark.jpg",
+        "macOS Sequoia": HOME_DIR + "/Pictures/Wallpapers/Sequoia-Sunrise-wallpaper-macos.jpg",
+        "MacBook Pro M3": HOME_DIR + "/Pictures/Wallpapers/M3-MacBook-Pro-Wallpaper-8K.png",
+        "Lake Tahoe": HOME_DIR + "/.config/revo/quickshell/macos/assets/wall.jpg",
+        "Match Desktop": "system"
+    })
+
+    readonly property string currentWallpaper: {
+        bumpU; rev;
+        return String(Shell.uget("lockScreen.wallpaper", ""));
+    }
+
+    readonly property string currentPresetName: {
+        var wp = currentWallpaper;
+        if (!wp || wp === "system" || wp === "") return "Match Desktop";
+        for (var k in wallpaperPresets) {
+            if (wallpaperPresets[k] === wp) return k;
+        }
+        return "Custom Image";
+    }
+
+    readonly property string effectivePreviewWallpaper: {
+        var wp = currentWallpaper;
+        if (!wp || wp === "system" || wp === "") {
+            wp = String(Shell.uget("wallpaperPath", ""));
+        }
+        if (!wp || wp === "") {
+            wp = HOME_DIR + "/Pictures/Wallpapers/14-Sonoma-Light.jpg";
+        }
+        return wp.startsWith("file://") ? wp : ("file://" + wp);
+    }
+
+    readonly property string currentAvatar: {
+        bumpU; rev;
+        var a = String(Shell.uget("lockScreen.avatar", ""));
+        if (!a || a === "system" || a === "default" || a === "") {
+            a = String(Shell.uget("avatarPath", ""));
+        }
+        if (!a || a === "") {
+            a = HOME_DIR + "/.config/revo/quickshell/macos/assets/user.jpg";
+        }
+        return a.startsWith("file://") ? a : ("file://" + a);
+    }
+
+    readonly property string clockFormat: {
+        bumpU; rev;
+        return String(Shell.uget("lockScreen.clockFormat", "12h"));
+    }
+
+    readonly property real dimOpacity: {
+        bumpU; rev;
+        var v = Number(Shell.uget("lockScreen.dimOpacity", 0.12));
+        if (isNaN(v)) return 0.12;
+        return Math.max(0.0, Math.min(0.50, v));
+    }
+
+    readonly property bool showDate: {
+        bumpU; rev;
+        return Shell.uget("lockScreen.showDate", true) === true;
+    }
+
+    readonly property bool showPowerButton: {
+        bumpU; rev;
+        return Shell.uget("lockScreen.showPowerButton", true) === true;
+    }
+
+    function resetDefaults() {
+        Shell.uset("lockScreen.wallpaper", HOME_DIR + "/Pictures/Wallpapers/14-Sonoma-Light.jpg");
+        Shell.uset("lockScreen.avatar", "system");
+        Shell.uset("lockScreen.clockFormat", "12h");
+        Shell.uset("lockScreen.showDate", true);
+        Shell.uset("lockScreen.showPowerButton", true);
+        Shell.uset("lockScreen.dimOpacity", 0.12);
+        rev++;
+    }
+
     function secs(v) {
         var m = { "Never": 0, "Immediately": 0, "5 seconds": 5, "1 minute": 60,
                   "2 minutes": 120, "5 minutes": 300, "10 minutes": 600,
-                  "15 minutes": 900, "20 minutes": 1200, "1 hour": 3600 }
-        return m[v] !== undefined ? m[v] : 0
+                  "15 minutes": 900, "20 minutes": 1200, "1 hour": 3600 };
+        return m[v] !== undefined ? m[v] : 0;
     }
 
     function backup(path) {
         if (Shell.readFile(path + ".settings-backup").length === 0) {
-            var t = Shell.readFile(path)
+            var t = Shell.readFile(path);
             if (t.length > 0)
-                Shell.writeFile(path + ".settings-backup", t)
+                Shell.writeFile(path + ".settings-backup", t);
         }
     }
 
     function applySystem() {
-        backup(idlePath)
-        backup(lockPath)
+        backup(idlePath);
+        backup(lockPath);
 
-        var enabled = eget("lockScreen.enable", true) === true
-        var ss = enabled ? secs(String(eget("lockScreen.startAfter", "Never"))) : 0
-        var off = secs(String(eget("lockScreen.displayOffAfter", "10 minutes")))
+        var enabled = eget("lockScreen.enable", true) === true;
+        var ss = enabled ? secs(String(eget("lockScreen.startAfter", "Never"))) : 0;
+        var off = secs(String(eget("lockScreen.displayOffAfter", "10 minutes")));
 
-        var L = []
-        L.push("general {")
-        L.push("    lock_cmd = bash ~/.config/hypr/scripts/macos_lock.sh 'pidof hyprlock || hyprlock'")
-        L.push("    before_sleep_cmd = bash ~/.config/hypr/scripts/macos_lock.sh 'loginctl lock-session'")
-        L.push("    after_sleep_cmd = hyprctl dispatch dpms on")
-        L.push("}")
+        var L = [];
+        L.push("general {");
+        L.push("    lock_cmd = bash ~/.config/hypr/scripts/macos_lock.sh 'pidof hyprlock || hyprlock'");
+        L.push("    before_sleep_cmd = bash ~/.config/hypr/scripts/macos_lock.sh 'loginctl lock-session'");
+        L.push("    after_sleep_cmd = hyprctl dispatch dpms on");
+        L.push("}");
         if (ss > 0) {
-            L.push("")
-            L.push("listener {")
-            L.push("    timeout = " + ss)
-            L.push("    on-timeout = pidof hyprlock >/dev/null || hyprlock")
-            L.push("}")
+            L.push("");
+            L.push("listener {");
+            L.push("    timeout = " + ss);
+            L.push("    on-timeout = pidof hyprlock >/dev/null || hyprlock");
+            L.push("}");
         }
         if (off > 0 && off !== ss) {
-            L.push("")
-            L.push("listener {")
-            L.push("    timeout = " + off)
-            L.push("    on-timeout = hyprctl dispatch dpms off")
-            L.push("    on-resume = hyprctl dispatch dpms on")
-            L.push("}")
+            L.push("");
+            L.push("listener {");
+            L.push("    timeout = " + off);
+            L.push("    on-timeout = hyprctl dispatch dpms off");
+            L.push("    on-resume = hyprctl dispatch dpms on");
+            L.push("}");
         }
-        Shell.writeFile(idlePath, L.join("\n") + "\n")
+        Shell.writeFile(idlePath, L.join("\n") + "\n");
 
-        var ht = Shell.readFile(lockPath)
-        if (ht.length > 0) {
-            var delay = eget("lockScreen.requirePassword", true) === true
-                        ? secs(String(eget("lockScreen.passwordDelay", "Immediately"))) : 0
-            ht = ht.replace(/grace = \d+/, "grace = " + delay)
-            var msg = eget("lockScreen.showMessage", false) === true
-                      ? String(eget("lockScreen.userNote", "")) : ""
-            msg = msg.replace(/["\\\n]/g, " ").replace(/^\s+|\s+$/g, "")
-            var line = msg.length > 0 ? "text = " + msg
-                       : "text = cmd[update:0] echo \"Wellcome, $USER!\""
-            ht = ht.replace(/text = cmd\[update:0\] echo "[^"]*"/, line)
-            ht = ht.replace(/text = cmd\[update:0\] echo "Wellcome, \$USER!"/, line)
-            Shell.writeFile(lockPath, ht)
-        }
-
-        Shell.run("pkill hypridle; sleep 0.2; hypridle >/dev/null 2>&1 &")
-        rev++
+        Shell.run("pkill hypridle; sleep 0.2; hypridle >/dev/null 2>&1 &");
+        rev++;
     }
 
     Timer {
@@ -102,11 +167,37 @@ Column {
         onTriggered: page.locking = false
     }
 
+    // File Dialogs
+    FileDialog {
+        id: wallpaperDialog
+        title: "Choose Lock Screen Wallpaper"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Images (*.jpg *.jpeg *.png *.webp *.bmp *.JPG *.PNG)", "All files (*)"]
+        onAccepted: {
+            var p = decodeURIComponent(selectedFile.toString().replace(/^file:\/\//, ""));
+            Shell.uset("lockScreen.wallpaper", p);
+            rev++;
+        }
+    }
+
+    FileDialog {
+        id: avatarDialog
+        title: "Choose Lock Screen Avatar"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Images (*.jpg *.jpeg *.png *.webp *.bmp *.svg *.JPG *.PNG)", "All files (*)"]
+        onAccepted: {
+            var p = decodeURIComponent(selectedFile.toString().replace(/^file:\/\//, ""));
+            Shell.uset("lockScreen.avatar", p);
+            rev++;
+        }
+    }
+
     Placard {
         iconFile: "sb_lockscreen"
         title: "Lock Screen"
     }
 
+    // Interactive macOS Sonoma Live Preview
     GroupCard {
         height: previewBox.height + 20
 
@@ -115,77 +206,237 @@ Column {
             x: 12
             y: 10
             width: parent.width - 24
-            height: Math.round(width * 0.36)
-            radius: 10
+            height: Math.round(width * 0.44)
+            radius: 12
             clip: true
             color: Theme.dark ? "#0c0c10" : "#1b1b1f"
 
+            // Wallpaper Image
             Image {
                 anchors.fill: parent
-                source: "file://" + String(Shell.eget("lockScreen.customWallpaperPath", "")).replace(/^file:\/\//, "")
+                source: page.effectivePreviewWallpaper
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
-                visible: status === Image.Ready
-                opacity: 0.75
+                smooth: true
+                mipmap: true
             }
+
+            // Dark vignette overlay
             Rectangle {
                 anchors.fill: parent
                 color: "black"
-                opacity: Number(Shell.eget("lockScreen.dimOpacity", 0.1))
+                opacity: page.dimOpacity
             }
 
+            // Top Center Clock & Date
             Column {
-                anchors.centerIn: parent
-                spacing: 6
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: 18
+                spacing: 2
 
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatTime(new Date(), "HH:mm")
-                    visible: String(eget("lockScreen.largeClock", "Digital")) !== "Off"
-                    font.family: Theme.fontText
-                    font.pixelSize: 44
-                    font.weight: Font.Light
-                    color: "white"
-
-                    Timer {
-                        interval: 10000
-                        running: page.visible
-                        repeat: true
-                        onTriggered: parent.text = Qt.formatTime(new Date(), "HH:mm")
-                    }
-                }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: Qt.formatDate(new Date(), "dddd, MMMM d")
-                    font.family: Theme.fontText
-                    font.pixelSize: 13
-                    color: Qt.rgba(1, 1, 1, 0.85)
+                    visible: page.showDate
+                    font { family: Theme.fontText; pixelSize: 12; weight: Font.DemiBold }
+                    color: "#ffffff"
+                    style: Text.Outline
+                    styleColor: Qt.rgba(0, 0, 0, 0.40)
                 }
+
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    visible: text.length > 0
-                    text: eget("lockScreen.showMessage", false) === true
-                          ? String(eget("lockScreen.userNote", ""))
-                          : String(Shell.eget("lockScreen.usageInfo", ""))
-                    font.family: Theme.fontText
-                    font.pixelSize: 11
-                    color: Qt.rgba(1, 1, 1, 0.6)
+                    text: page.clockFormat === "24h"
+                          ? Qt.formatTime(new Date(), "HH:mm")
+                          : Qt.formatTime(new Date(), "h:mm")
+                    font { family: Theme.fontText; pixelSize: 42; bold: true }
+                    color: "#ffffff"
+                    style: Text.Outline
+                    styleColor: Qt.rgba(0, 0, 0, 0.35)
+
+                    Timer {
+                        interval: 1000
+                        running: page.visible
+                        repeat: true
+                        onTriggered: parent.text = (page.clockFormat === "24h"
+                            ? Qt.formatTime(new Date(), "HH:mm")
+                            : Qt.formatTime(new Date(), "h:mm"))
+                    }
                 }
             }
 
-            Text {
-                anchors.left: parent.left
-                anchors.leftMargin: 14
+            // Bottom Center Avatar & Password Pill
+            Column {
+                anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
-                anchors.bottomMargin: 12
-                text: page.locking ? "Locked" : ""
-                font { family: Theme.fontText; pixelSize: 12; bold: true }
-                color: Qt.rgba(1, 1, 1, 0.75)
+                anchors.bottomMargin: 14
+                spacing: 6
+
+                // Avatar circle
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 32
+                    height: 32
+                    radius: 16
+                    color: Qt.rgba(255, 255, 255, 0.20)
+                    border.color: Qt.rgba(255, 255, 255, 0.40)
+                    border.width: 1
+                    clip: true
+
+                    Image {
+                        anchors.fill: parent
+                        source: page.currentAvatar
+                        fillMode: Image.PreserveAspectCrop
+                        smooth: true
+                        mipmap: true
+                    }
+                }
+
+                // Password pill
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 110
+                    height: 20
+                    radius: 10
+                    color: Qt.rgba(255, 255, 255, 0.22)
+                    border.color: Qt.rgba(255, 255, 255, 0.35)
+                    border.width: 0.8
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Enter Password"
+                        font { family: Theme.fontText; pixelSize: 9 }
+                        color: Qt.rgba(255, 255, 255, 0.70)
+                    }
+                }
+            }
+
+            // Bottom right power button
+            Text {
+                anchors.right: parent.right
+                anchors.rightMargin: 12
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+                visible: page.showPowerButton
+                text: "\u23FB"
+                font { family: Theme.fontText; pixelSize: 12 }
+                color: Qt.rgba(255, 255, 255, 0.85)
             }
         }
     }
 
-    SectionHeader { text: "Display" }
+    Item { width: 1; height: 4 }
+
+    SectionHeader { text: "Lock Screen Wallpaper" }
+
+    GroupCard {
+        DetailRow {
+            title: "Wallpaper"
+            subtitle: "Select preset background or match your desktop."
+            pickerOptions: [
+                "macOS Sonoma (Light)",
+                "macOS Sonoma (Dark)",
+                "macOS Sequoia",
+                "MacBook Pro M3",
+                "Lake Tahoe",
+                "Match Desktop",
+                "Custom Image"
+            ]
+            value: page.currentPresetName
+            onPicked: (v) => {
+                if (v === "Custom Image") {
+                    wallpaperDialog.open();
+                } else if (page.wallpaperPresets[v] !== undefined) {
+                    Shell.uset("lockScreen.wallpaper", page.wallpaperPresets[v]);
+                    rev++;
+                }
+            }
+        }
+        DetailRow {
+            separator: true
+            title: "Browse Wallpaper File..."
+            subtitle: page.currentWallpaper.length > 0 ? page.currentWallpaper : "Using preset/desktop"
+            chevron: true
+            onClicked: wallpaperDialog.open()
+        }
+        DetailRow {
+            separator: true
+            title: "Backdrop Dimming"
+            subtitle: Math.round(page.dimOpacity * 100) + "% darkening"
+            isSlider: true
+            sliderValue: Math.max(0, Math.min(1, page.dimOpacity / 0.50))
+            onMoved: (r) => {
+                var val = Math.round(r * 50) / 100;
+                Shell.uset("lockScreen.dimOpacity", val);
+                rev++;
+            }
+        }
+    }
+
+    Item { width: 1; height: 4 }
+
+    SectionHeader { text: "Avatar & User" }
+
+    GroupCard {
+        DetailRow {
+            title: "Choose Custom Avatar..."
+            subtitle: "Set custom picture for lock screen avatar."
+            chevron: true
+            onClicked: avatarDialog.open()
+        }
+        DetailRow {
+            separator: true
+            title: "Match System Profile Picture"
+            subtitle: "Reset avatar to your user account picture."
+            chevron: true
+            onClicked: {
+                Shell.uset("lockScreen.avatar", "system");
+                rev++;
+            }
+        }
+    }
+
+    Item { width: 1; height: 4 }
+
+    SectionHeader { text: "Clock & Display" }
+
+    GroupCard {
+        DetailRow {
+            title: "Clock Format"
+            pickerOptions: ["12-hour", "24-hour"]
+            value: page.clockFormat === "24h" ? "24-hour" : "12-hour"
+            onPicked: (v) => {
+                Shell.uset("lockScreen.clockFormat", v === "24-hour" ? "24h" : "12h");
+                rev++;
+            }
+        }
+        DetailRow {
+            separator: true
+            title: "Show date above clock"
+            showSwitch: true
+            switchOn: page.showDate
+            onToggled: (c) => {
+                Shell.uset("lockScreen.showDate", c);
+                rev++;
+            }
+        }
+        DetailRow {
+            separator: true
+            title: "Show power button"
+            subtitle: "Displays sleep/power button in bottom right corner."
+            showSwitch: true
+            switchOn: page.showPowerButton
+            onToggled: (c) => {
+                Shell.uset("lockScreen.showPowerButton", c);
+                rev++;
+            }
+        }
+    }
+
+    Item { width: 1; height: 4 }
+
+    SectionHeader { text: "Inactivity & Sleep" }
 
     GroupCard {
         DetailRow {
@@ -220,100 +471,25 @@ Column {
 
     Item { width: 1; height: 4 }
 
-    SectionHeader { text: "Clock & Message" }
-
-    GroupCard {
-        DetailRow {
-            title: "Show large clock"
-            pickerOptions: ["Off", "Analog", "Digital"]
-            value: String(eget("lockScreen.largeClock", "Digital"))
-            onPicked: (v) => { Shell.eset("lockScreen.largeClock", v); rev++ }
-        }
-        DetailRow {
-            separator: true
-            title: "Show message with clock"
-            showSwitch: true
-            switchOn: eget("lockScreen.showMessage", false) === true
-            onToggled: (c) => { Shell.eset("lockScreen.showMessage", c); page.scheduleApply() }
-        }
-        DetailRow {
-            visible: eget("lockScreen.showMessage", false) === true
-            title: "Message"
-            value: String(eget("lockScreen.userNote", ""))
-            pickerOptions: ["", "Hello", "Do not disturb", "Back soon"]
-            onPicked: (v) => { Shell.eset("lockScreen.userNote", v); page.scheduleApply() }
-        }
-        DetailRow {
-            separator: true
-            title: "Show user name and photo"
-            showSwitch: true
-            switchOn: eget("lockScreen.showAvatar", true) === true && eget("lockScreen.showName", true) === true
-            onToggled: (c) => { Shell.eset("lockScreen.showAvatar", c); Shell.eset("lockScreen.showName", c); rev++ }
-        }
-    }
-
-    Item { width: 1; height: 4 }
-
-    SectionHeader { text: "Screen Saver" }
-
-    GroupCard {
-        DetailRow {
-            title: "Show as wallpaper"
-            showSwitch: true
-            switchOn: eget("lockScreen.useAsWallpaper", true) === true
-            onToggled: (c) => { Shell.eset("lockScreen.useAsWallpaper", c); rev++ }
-        }
-        DetailRow {
-            separator: true
-            title: "Blur strength"
-            isSlider: true
-            sliderValue: {
-                bumpE
-                return Math.max(0, Math.min(1, Number(Shell.eget("lockScreen.blurStrength", 1)) / 4))
-            }
-            onMoved: (r) => { Shell.eset("lockScreen.blurStrength", Math.round(r * 4)); rev++ }
-        }
-        DetailRow {
-            separator: true
-            title: "Fade duration (ms)"
-            isSlider: true
-            sliderValue: {
-                bumpE
-                return Math.max(0, Math.min(1, Number(Shell.eget("lockScreen.fadeDuration", 500)) / 2000))
-            }
-            onMoved: (r) => { Shell.eset("lockScreen.fadeDuration", Math.round(r * 2000 / 50) * 50); rev++ }
-        }
-    }
-
-    Item { width: 1; height: 4 }
-
-    SectionHeader { text: "Locking" }
+    SectionHeader { text: "Actions" }
 
     GroupCard {
         DetailRow {
             title: "Lock Screen Now"
-            subtitle: "Immediately shows the lock screen."
+            subtitle: "Test your lock screen settings immediately."
             chevron: true
             onClicked: {
-                page.locking = true
-                unlockTimer.restart()
-                Shell.ipc("lock", "lock", [])
+                page.locking = true;
+                unlockTimer.restart();
+                Shell.run("bash -c 'echo lock > /tmp/macos_cmd'");
             }
         }
         DetailRow {
             separator: true
-            title: "Enable lock screen"
-            subtitle: "Used by the shell and hypridle."
-            showSwitch: true
-            switchOn: eget("lockScreen.enable", true) === true
-            onToggled: (c) => { Shell.eset("lockScreen.enable", c); page.scheduleApply() }
-        }
-        DetailRow {
-            separator: true
-            title: "Test display off now"
-            subtitle: "Turns the monitor off; move the mouse to wake it."
+            title: "Reset to Sonoma Defaults"
+            subtitle: "Restore macOS Sonoma Light graphic, 12h clock, and defaults."
             chevron: true
-            onClicked: Shell.run("hyprctl dispatch dpms off >/dev/null 2>&1")
+            onClicked: page.resetDefaults()
         }
     }
 
