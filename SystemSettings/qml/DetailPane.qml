@@ -125,7 +125,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        contentHeight: pageLoader.implicitHeight + 24
+        contentHeight: (pageLoader.item && pageLoader.item.implicitHeight > 0 ? pageLoader.item.implicitHeight : pageLoader.implicitHeight) + 32
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: ScrollBar {}
@@ -144,7 +144,7 @@ Item {
 
             onStatusChanged: {
                 if (status === Loader.Error)
-                    console.log("PAGE LOAD ERROR:", source, errorString())
+                    console.log("PAGE LOAD ERROR:", source)
             }
         }
 

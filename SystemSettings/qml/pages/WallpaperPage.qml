@@ -26,21 +26,37 @@ Column {
     // ---------------------------------------------------------------- library
     property var allImgs: []
     property var dyn: []
-    property var photos: []
-    property var wide: []
-    property var tall: []
+    property var folderList: []
     property var sections: []
 
-    readonly property var folders: {
+    function refreshFolders() {
+        var roots = [
+            HOME_DIR + "/Pictures/wallpapers",
+            HOME_DIR + "/Pictures/Wallpapers",
+            HOME_DIR + "/.config/wallpapers",
+            HOME_DIR + "/.local/share/wallpapers/MacTahoe/contents/images",
+            HOME_DIR + "/.local/share/wallpapers/MacTahoe-Dark/contents/images",
+            HOME_DIR + "/.local/share/wallpapers/MacTahoe-Light/contents/images",
+            HOME_DIR + "/.local/share/equora/wallpapers",
+            HOME_DIR + "/Pictures"
+        ]
+
+        var currentF = decodeURIComponent(String(eget("wallpaper.folder", "")).replace(/^file:\/\//, "")).replace(/\/+$/, "")
+        if (currentF.length > 0)
+            roots.unshift(currentF)
+
+        var custom = eget("wallpaper.customFolders", [])
+        if (Array.isArray(custom)) {
+            for (var c = 0; c < custom.length; c++) {
+                if (custom[c]) {
+                    var cp = decodeURIComponent(String(custom[c]).replace(/^file:\/\//, "")).replace(/\/+$/, "")
+                    if (cp.length > 0)
+                        roots.unshift(cp)
+                }
+            }
+        }
+
         var out = []
-        var roots = [HOME_DIR + "/Pictures/Wallpapers",
-                     HOME_DIR + "/Pictures",
-                     HOME_DIR + "/.local/share/wallpapers/MacTahoe/contents/images",
-                     HOME_DIR + "/.local/share/wallpapers/MacTahoe-Dark/contents/images",
-                     HOME_DIR + "/.local/share/wallpapers/MacTahoe-Light/contents/images",
-                     HOME_DIR + "/.config/wallpapers",
-                     Shell.eget("wallpaper.folder", "").toString().replace(/^file:\/\//, "").replace(/\/$/, ""),
-                     HOME_DIR + "/.local/share/equora/wallpapers"]
         var seen = {}
         for (var i = 0; i < roots.length; i++) {
             var r = roots[i]
@@ -48,62 +64,169 @@ Column {
                 continue
             seen[r] = true
             var files = Shell.listFiles(r, "")
-            if (files.length > 0)
-                out.push({ name: r.split("/").filter(Boolean).pop() || r, dir: r, files: files })
+            if (files.length > 0) {
+                var folderName = r.split("/").filter(Boolean).pop() || r
+                out.push({ name: folderName, dir: r, count: files.length })
+            }
         }
-        return out
+        folderList = out
+    }
+
+    function addCustomFolder(folderUri) {
+        if (!folderUri)
+            return
+        var d = decodeURIComponent(folderUri.toString().replace(/^file:\/\//, "")).replace(/\/+$/, "")
+        if (d.length === 0)
+            return
+
+        var custom = eget("wallpaper.customFolders", [])
+        if (!Array.isArray(custom)) {
+            custom = (custom && custom.length > 0) ? [custom.toString()] : []
+        }
+        var found = false
+        for (var i = 0; i < custom.length; i++) {
+            if (custom[i] === d) {
+                found = true
+                break
+            }
+        }
+        if (!found) {
+            custom.push(d)
+            Shell.eset("wallpaper.customFolders", custom)
+        }
+        Shell.eset("wallpaper.folder", "file://" + d + "/")
+        rev++
+        build()
     }
 
     function build() {
-        var roots = [HOME_DIR + "/Pictures/Wallpapers",
-                     HOME_DIR + "/.local/share/wallpapers/MacTahoe/contents/images",
-                     HOME_DIR + "/.local/share/wallpapers/MacTahoe-Dark/contents/images",
-                     HOME_DIR + "/.local/share/wallpapers/MacTahoe-Light/contents/images",
-                     HOME_DIR + "/.config/wallpapers",
-                     Shell.eget("wallpaper.folder", "").toString().replace(/^file:\/\//, "").replace(/\/$/, ""),
-                     HOME_DIR + "/Pictures",
-                     HOME_DIR + "/.local/share/equora/wallpapers"]
-        var seen = {}
-        var all = []
-        for (var i = 0; i < roots.length; i++) {
-            var r = roots[i]
-            if (!r || seen[r])
-                continue
-            seen[r] = true
-            var imgs = Shell.listImages(r)
-            for (var j = 0; j < imgs.length; j++)
-                all.push(imgs[j])
-        }
-        var d = [], p = [], w = [], t = []
-        var cap = 400
-        for (var k = 0; k < all.length; k++) {
-            var m = all[k]
-            if (m.animated === true) { if (d.length < cap) d.push(m); continue }
-            if (p.length < cap) p.push(m)
-            if (m.w >= m.h) { if (w.length < cap) w.push(m) }
-            else if (m.h > m.w) { if (t.length < cap) t.push(m) }
-        }
-        allImgs = all
-        dyn = d
-        photos = p
-        wide = w
-        tall = t
+        refreshFolders()
+
+        var activeFolder = decodeURIComponent(String(eget("wallpaper.folder", "")).replace(/^file:\/\//, "")).replace(/\/+$/, "")
+        if (activeFolder.length === 0 && folderList.length > 0)
+            activeFolder = folderList[0].dir
 
         var s = []
-        if (d.length > 0)
-            s.push({ title: "Dynamic Wallpapers", files: d, add: false, hint: "Dynamic wallpapers (GIF, video) appear here." })
-        if (p.length > 0)
-            s.push({ title: "Photos", files: p, add: true, hint: "" })
-        if (w.length > 0)
-            s.push({ title: "Landscape", files: w, add: false, hint: "Landscape wallpapers appear here." })
-        if (t.length > 0)
-            s.push({ title: "Portraits", files: t, add: false, hint: "" })
-        if (s.length === 0 && all.length > 0)
-            s.push({ title: "Wallpapers", files: all, add: true, hint: "" })
+        var seenDirs = {}
+        var allScanned = []
+
+        // 1. First section: Active / Selected Wallpaper folder
+        if (activeFolder.length > 0) {
+            var activeImgs = Shell.listImages(activeFolder)
+            if (activeImgs.length > 0) {
+                seenDirs[activeFolder] = true
+                var activeName = activeFolder.split("/").filter(Boolean).pop() || "Wallpapers"
+                s.push({
+                    title: activeName,
+                    dir: activeFolder,
+                    files: activeImgs,
+                    add: true,
+                    hint: "No images found in " + activeName
+                })
+                for (var ai = 0; ai < activeImgs.length; ai++)
+                    allScanned.push(activeImgs[ai])
+            }
+        }
+
+        // 2. Custom Folders added by user
+        var custom = eget("wallpaper.customFolders", [])
+        if (Array.isArray(custom)) {
+            for (var c = 0; c < custom.length; c++) {
+                var cDir = decodeURIComponent(String(custom[c]).replace(/^file:\/\//, "")).replace(/\/+$/, "")
+                if (cDir.length > 0 && !seenDirs[cDir]) {
+                    seenDirs[cDir] = true
+                    var cImgs = Shell.listImages(cDir)
+                    var cName = cDir.split("/").filter(Boolean).pop() || cDir
+                    s.push({
+                        title: cName,
+                        dir: cDir,
+                        files: cImgs,
+                        add: true,
+                        hint: "No images found in " + cName
+                    })
+                    for (var ci = 0; ci < cImgs.length; ci++)
+                        allScanned.push(cImgs[ci])
+                }
+            }
+        }
+
+        // 3. Known wallpaper folders (e.g. Pictures/wallpapers, Pictures/Wallpapers)
+        var wellKnown = [
+            HOME_DIR + "/Pictures/wallpapers",
+            HOME_DIR + "/Pictures/Wallpapers",
+            HOME_DIR + "/.config/wallpapers"
+        ]
+        for (var w = 0; w < wellKnown.length; w++) {
+            var wkDir = wellKnown[w]
+            if (!seenDirs[wkDir]) {
+                var wkImgs = Shell.listImages(wkDir)
+                if (wkImgs.length > 0) {
+                    seenDirs[wkDir] = true
+                    var wkName = wkDir.split("/").filter(Boolean).pop() || wkDir
+                    s.push({
+                        title: wkName,
+                        dir: wkDir,
+                        files: wkImgs,
+                        add: true,
+                        hint: ""
+                    })
+                    for (var wi = 0; wi < wkImgs.length; wi++)
+                        allScanned.push(wkImgs[wi])
+                }
+            }
+        }
+
+        // 4. macOS Tahoe System Wallpapers
+        var macTahoe = [
+            HOME_DIR + "/.local/share/wallpapers/MacTahoe/contents/images",
+            HOME_DIR + "/.local/share/wallpapers/MacTahoe-Dark/contents/images",
+            HOME_DIR + "/.local/share/wallpapers/MacTahoe-Light/contents/images"
+        ]
+        var macImgs = []
+        for (var m = 0; m < macTahoe.length; m++) {
+            var mtImgs = Shell.listImages(macTahoe[m])
+            for (var mi = 0; mi < mtImgs.length; mi++)
+                macImgs.push(mtImgs[mi])
+        }
+        if (macImgs.length > 0) {
+            s.push({
+                title: "macOS Tahoe",
+                dir: macTahoe[0],
+                files: macImgs,
+                add: false,
+                hint: ""
+            })
+            for (var mti = 0; mti < macImgs.length; mti++)
+                allScanned.push(macImgs[mti])
+        }
+
+        // 5. Dynamic wallpapers (GIFs / Videos from any scanned folders)
+        var dynImgs = []
+        for (var si = 0; si < s.length; si++) {
+            for (var fi = 0; fi < s[si].files.length; fi++) {
+                var fItem = s[si].files[fi]
+                if (fItem.animated === true || isGif(fItem.path) || isVideo(fItem.path)) {
+                    dynImgs.push(fItem)
+                }
+            }
+        }
+        if (dynImgs.length > 0) {
+            s.unshift({
+                title: "Dynamic Wallpapers",
+                dir: "",
+                files: dynImgs,
+                add: false,
+                hint: "Dynamic wallpapers (GIF, video) appear here."
+            })
+        }
+
+        allImgs = allScanned
+        dyn = dynImgs
         sections = s
 
-        console.log("WALLPAPER_LIB all=" + all.length + " dyn=" + d.length + " photos=" + p.length
-                    + " wide=" + w.length + " tall=" + t.length + " sections=" + sections.length)
+        console.log("WALLPAPER_LIB sections=" + sections.length + " activeFolder=" + activeFolder)
+        for (var si = 0; si < sections.length; si++)
+            console.log("  SECTION " + si + ": " + sections[si].title + " (" + sections[si].files.length + ")")
     }
 
     readonly property string current: {
@@ -118,8 +241,8 @@ Column {
         var active = Shell.execOut("awww query 2>/dev/null | grep -o '/.*' | head -n1", 500)
         if (active && active.length > 0)
             return active.trim()
-        if (photos.length > 0)
-            return photos[0].path
+        if (allImgs.length > 0)
+            return allImgs[0].path
         return ""
     }
 
@@ -163,7 +286,7 @@ Column {
         nameFilters: ["Images (*.jpg *.jpeg *.png *.webp *.bmp *.gif *.JPG)",
                       "Movies (*.mp4 *.webm *.mov *.mkv)", "All files (*)"]
         onAccepted: {
-            var p = selectedFile.toString().replace("file://", "")
+            var p = decodeURIComponent(selectedFile.toString().replace(/^file:\/\//, ""))
             page.apply(p)
         }
     }
@@ -172,10 +295,7 @@ Column {
         id: addFolderDlg
         title: "Choose Wallpaper Folder"
         onAccepted: {
-            var d = selectedFolder.toString().replace("file://", "")
-            Shell.eset("wallpaper.folder", d.replace(/\/$/, "") + "/")
-            rev++
-            page.build()
+            page.addCustomFolder(selectedFolder.toString())
         }
     }
 
@@ -394,14 +514,22 @@ Column {
         DetailRow {
             separator: true
             title: "Folder"
-            pickerOptions: page.folders.map(function (f) { return f.name })
-            value: page.folders.length > 0 ? page.folders[Math.min(page.selFolderIdx(), page.folders.length - 1)].name : "\u2014"
+            pickerOptions: page.folderList.map(function (f) { return f.name })
+            value: {
+                page.rev
+                var cur = decodeURIComponent(String(page.eget("wallpaper.folder", "")).replace(/^file:\/\//, "")).replace(/\/+$/, "")
+                for (var i = 0; i < page.folderList.length; i++) {
+                    if (page.folderList[i].dir === cur)
+                        return page.folderList[i].name
+                }
+                return page.folderList.length > 0 ? page.folderList[0].name : "\u2014"
+            }
             onPicked: (v) => {
-                for (var i = 0; i < page.folders.length; i++) {
-                    if (page.folders[i].name === v) {
-                        Shell.eset("wallpaper.folder", "file://" + page.folders[i].dir + "/")
+                for (var i = 0; i < page.folderList.length; i++) {
+                    if (page.folderList[i].name === v) {
+                        Shell.eset("wallpaper.folder", "file://" + page.folderList[i].dir + "/")
+                        page.rev++
                         page.build()
-                        rev++
                         break
                     }
                 }
@@ -425,14 +553,6 @@ Column {
         }
     }
 
-    function selFolderIdx() {
-        var f = String(eget("wallpaper.folder", "")).replace(/^file:\/\//, "").replace(/\/$/, "")
-        for (var i = 0; i < folders.length; i++)
-            if (folders[i].dir === f)
-                return i
-        return 0
-    }
-
     // ---------------------------------------------------------------- strips
     Repeater {
         model: page.sections
@@ -442,29 +562,40 @@ Column {
             required property var modelData
             required property int index
             width: page.width
-            spacing: 6
+            spacing: 8
 
             Item { width: 1; height: 6 }
 
             SectionHeader {
+                id: secHeader
                 width: parent.width
                 text: sec.modelData.title
                 suffix: " (" + sec.modelData.files.length + ")"
                 buttonLabel: sec.modelData.add ? "Add Photo\u2026" : ""
-                onButtonClicked: addPhotoDlg.open()
+                onButtonClicked: {
+                    if (sec.modelData.dir) {
+                        addPhotoDlg.currentFolder = "file://" + sec.modelData.dir
+                    }
+                    addPhotoDlg.open()
+                }
             }
 
-            GroupCard {
+            Rectangle {
+                id: cardRect
+                x: 12
                 width: parent.width - 24
-                height: sec.modelData.files.length > 0 ? strip.implicitHeight + 24 : 56
+                height: sec.modelData.files.length > 0 ? 120 : 54
+                implicitHeight: height
+                radius: 10
+                color: Theme.cardBg
+                clip: true
 
                 Text {
                     visible: sec.modelData.files.length === 0
-                    x: 16
-                    y: (parent.height - height) / 2
+                    anchors.centerIn: parent
                     width: parent.width - 32
                     horizontalAlignment: Text.AlignHCenter
-                    text: sec.modelData.hint
+                    text: sec.modelData.hint && sec.modelData.hint.length > 0 ? sec.modelData.hint : "No wallpapers found."
                     font { family: Theme.fontText; pixelSize: 12 }
                     color: Theme.textSecondary
                 }
@@ -472,10 +603,8 @@ Column {
                 Item {
                     id: strip
                     visible: sec.modelData.files.length > 0
-                    x: 12
-                    y: 12
-                    width: parent.width - 24
-                    height: 96
+                    anchors.fill: parent
+                    anchors.margins: 12
 
                     Flickable {
                         id: flick
@@ -487,9 +616,14 @@ Column {
                         interactive: cells.width > width
                         flickableDirection: Flickable.HorizontalFlick
 
+                        Behavior on contentX {
+                            enabled: !flick.moving && !flick.flicking
+                            NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+                        }
+
                         Row {
                             id: cells
-                            spacing: 8
+                            spacing: 10
                             height: parent.height
 
                             Repeater {
@@ -560,36 +694,84 @@ Column {
                         }
                     }
 
-                    Component.onCompleted:
-                        console.log("WP_STRIP " + sec.modelData.title
-                                   + " files=" + sec.modelData.files.length
-                                   + " w=" + width + " h=" + height
-                                   + " contentW=" + flick.contentWidth)
-
-                    // right-edge scroll affordance
-                    Rectangle {
-                        visible: flick.contentWidth > flick.width && flick.atXEnd === false
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 26
-                        height: 54
-                        radius: 13
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.0) }
-                            GradientStop { position: 1.0; color: Theme.dark ? Qt.rgba(0, 0, 0, 0.55) : Qt.rgba(1, 1, 1, 0.75) }
+                    WheelHandler {
+                        target: flick
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onWheel: (event) => {
+                            var dx = event.angleDelta.x
+                            if (dx !== 0) {
+                                flick.contentX = Math.max(0, Math.min(Math.max(0, flick.contentWidth - flick.width), flick.contentX - dx * 1.5))
+                                event.accepted = true
+                                return
+                            }
+                            var dy = event.angleDelta.y
+                            if (dy !== 0 && flick.contentWidth > flick.width) {
+                                var targetX = flick.contentX - dy * 1.5
+                                if (targetX >= 0 && targetX <= (flick.contentWidth - flick.width)) {
+                                    flick.contentX = targetX
+                                    event.accepted = true
+                                } else {
+                                    if (targetX < 0) flick.contentX = 0
+                                    else if (targetX > flick.contentWidth - flick.width) flick.contentX = flick.contentWidth - flick.width
+                                    event.accepted = false
+                                }
+                            }
                         }
+                    }
+
+                    // Left-edge scroll button
+                    Rectangle {
+                        id: leftBtn
+                        visible: flick.contentWidth > flick.width && flick.contentX > 8
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 28
+                        height: 56
+                        radius: 14
+                        color: Theme.dark ? Qt.rgba(0.1, 0.1, 0.12, 0.85) : Qt.rgba(1, 1, 1, 0.9)
+                        border.width: 1
+                        border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(0, 0, 0, 0.15)
+                        z: 10
 
                         Text {
                             anchors.centerIn: parent
-                            text: "\u203A"
-                            font { pixelSize: 22; bold: true }
-                            color: Theme.dark ? "white" : "#333333"
+                            text: "\u2039"
+                            font { pixelSize: 24; bold: true }
+                            color: Theme.dark ? "white" : "#222"
                         }
 
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: flick.flick(flick.width, 0)
+                            onClicked: flick.contentX = Math.max(0, flick.contentX - flick.width * 0.75)
+                        }
+                    }
+
+                    // Right-edge scroll button
+                    Rectangle {
+                        id: rightBtn
+                        visible: flick.contentWidth > flick.width && flick.contentX < (flick.contentWidth - flick.width - 8)
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 28
+                        height: 56
+                        radius: 14
+                        color: Theme.dark ? Qt.rgba(0.1, 0.1, 0.12, 0.85) : Qt.rgba(1, 1, 1, 0.9)
+                        border.width: 1
+                        border.color: Theme.dark ? Qt.rgba(1, 1, 1, 0.18) : Qt.rgba(0, 0, 0, 0.15)
+                        z: 10
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\u203A"
+                            font { pixelSize: 24; bold: true }
+                            color: Theme.dark ? "white" : "#222"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: flick.contentX = Math.min(flick.contentWidth - flick.width, flick.contentX + flick.width * 0.75)
                         }
                     }
                 }
@@ -597,5 +779,5 @@ Column {
         }
     }
 
-    Item { width: 1; height: 6 }
+    Item { width: 1; height: 16 }
 }
