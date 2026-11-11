@@ -29,6 +29,7 @@ Column {
     property var photos: []
     property var wide: []
     property var tall: []
+    property var sections: []
 
     readonly property var folders: {
         var out = []
@@ -58,6 +59,7 @@ Column {
                      HOME_DIR + "/.local/share/wallpapers/MacTahoe/contents/images",
                      HOME_DIR + "/.local/share/wallpapers/MacTahoe-Dark/contents/images",
                      HOME_DIR + "/.local/share/wallpapers/MacTahoe-Light/contents/images",
+                     HOME_DIR + "/.config/wallpapers",
                      Shell.eget("wallpaper.folder", "").toString().replace(/^file:\/\//, "").replace(/\/$/, ""),
                      HOME_DIR + "/Pictures",
                      HOME_DIR + "/.local/share/equora/wallpapers"]
@@ -86,21 +88,22 @@ Column {
         photos = p
         wide = w
         tall = t
-        console.log("WALLPAPER_LIB all=" + all.length + " dyn=" + d.length + " photos=" + p.length
-                    + " wide=" + w.length + " tall=" + t.length)
-    }
 
-    readonly property var sections: {
-        var s = [
-            { title: "Dynamic Wallpapers", files: dyn, add: false,
-              hint: "Dynamic wallpapers (GIF, video) appear here." },
-            { title: "Photos", files: photos, add: true, hint: "" },
-            { title: "Landscape", files: wide, add: false,
-              hint: "Landscape wallpapers appear here." }
-        ]
-        if (tall.length > 0)
-            s.push({ title: "Portraits", files: tall, add: false, hint: "" })
-        return s
+        var s = []
+        if (d.length > 0)
+            s.push({ title: "Dynamic Wallpapers", files: d, add: false, hint: "Dynamic wallpapers (GIF, video) appear here." })
+        if (p.length > 0)
+            s.push({ title: "Photos", files: p, add: true, hint: "" })
+        if (w.length > 0)
+            s.push({ title: "Landscape", files: w, add: false, hint: "Landscape wallpapers appear here." })
+        if (t.length > 0)
+            s.push({ title: "Portraits", files: t, add: false, hint: "" })
+        if (s.length === 0 && all.length > 0)
+            s.push({ title: "Wallpapers", files: all, add: true, hint: "" })
+        sections = s
+
+        console.log("WALLPAPER_LIB all=" + all.length + " dyn=" + d.length + " photos=" + p.length
+                    + " wide=" + w.length + " tall=" + t.length + " sections=" + sections.length)
     }
 
     readonly property string current: {
@@ -112,9 +115,9 @@ Column {
         p = String(eget("wallpaper.path", ""))
         if (p.length > 0)
             return p
-        var active = Shell.execOut("awww query 2>/dev/null | grep -o '/.*' | head -n1")
+        var active = Shell.execOut("awww query 2>/dev/null | grep -o '/.*' | head -n1", 500)
         if (active && active.length > 0)
-            return active
+            return active.trim()
         if (photos.length > 0)
             return photos[0].path
         return ""
@@ -128,7 +131,6 @@ Column {
         Shell.run("pgrep -x awww-daemon >/dev/null || awww-daemon & sleep 0.2; awww img --transition-type center --transition-step 90 '" + path.replace(/'/g, "'\\''") + "'")
         Shell.run("bash " + HOME_DIR + "/.config/revo/hypr/scripts/wallpapers/set.sh '" + path.replace(/'/g, "'\\''") + "'")
         rev++
-        build()
     }
 
     function applyColor(c) {
@@ -263,138 +265,115 @@ Column {
     }
 
     // ---------------------------------------------------------------- options
-    SectionHeader { text: "Wallpaper" }
+    // ---------------------------------------------------------------- options
+    SectionHeader { text: "Mode" }
 
-    Row {
-        width: parent.width
-        spacing: 12
+    GroupCard {
+        Column {
+            id: modeCol
+            x: 14
+            y: 12
+            width: parent.width - 28
+            spacing: 8
 
-        GroupCard {
-            width: (parent.width - 12) / 2
-            height: modeBox.height + 24
+            Flow {
+                width: parent.width
+                spacing: 8
 
-            Item {
-                id: modeBox
-                x: 12
-                y: 12
-                width: parent.width - 24
-                height: 74
+                Repeater {
+                    model: [
+                        { label: "Dynamic", glyph: "\u25D1" },
+                        { label: "Still", glyph: "\u25AD" },
+                        { label: "Shuffle", glyph: "\u21C4" },
+                        { label: "Video", glyph: "\u25B6" }
+                    ]
 
-                Text {
-                    x: 4
-                    y: 0
-                    text: "Mode"
-                    font { family: Theme.fontText; pixelSize: 11 }
-                    color: Theme.textSecondary
-                }
+                    delegate: Rectangle {
+                        id: mode
+                        required property var modelData
+                        width: modeLbl.implicitWidth + 24
+                        height: 34
+                        radius: 7
+                        color: page.modeOf() === mode.modelData.label ? Theme.accent
+                             : Theme.dark ? "#3A3A3C" : "#E9E9EB"
+                        border.width: 1
+                        border.color: Qt.rgba(0, 0, 0, 0.06)
 
-                Row {
-                    x: 4
-                    y: 22
-                    spacing: 6
+                        Text {
+                            id: modeLbl
+                            anchors.centerIn: parent
+                            text: mode.modelData.glyph + "  " + mode.modelData.label
+                            font { family: Theme.fontText; pixelSize: 12 }
+                            color: page.modeOf() === mode.modelData.label ? "white" : Theme.textPrimary
+                        }
 
-                    Repeater {
-                        model: [
-                            { label: "Dynamic", glyph: "\u25D1" },
-                            { label: "Still", glyph: "\u25AD" },
-                            { label: "Shuffle", glyph: "\u21C4" },
-                            { label: "Video", glyph: "\u25B6" }
-                        ]
-
-                        delegate: Rectangle {
-                            id: mode
-                            required property var modelData
-                            width: modeLbl.implicitWidth + 26
-                            height: 46
-                            radius: 8
-                            color: page.modeOf() === mode.modelData.label ? Theme.accent
-                                 : Theme.dark ? "#3A3A3C" : "#E9E9EB"
-                            border.width: 1
-                            border.color: Qt.rgba(0, 0, 0, 0.06)
-
-                            Text {
-                                id: modeLbl
-                                anchors.centerIn: parent
-                                text: mode.modelData.glyph + "  " + mode.modelData.label
-                                font { family: Theme.fontText; pixelSize: 12 }
-                                color: page.modeOf() === mode.modelData.label ? "white" : Theme.textPrimary
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    Shell.eset("wallpaper.mode", mode.modelData.label)
-                                    rev++
-                                }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                Shell.eset("wallpaper.mode", mode.modelData.label)
+                                rev++
                             }
                         }
                     }
                 }
             }
+
+            Item { width: 1; height: 4 }
         }
+    }
 
-        GroupCard {
-            width: (parent.width - 12) / 2
-            height: colorBox.height + 24
+    SectionHeader { text: "Colours" }
 
-            Item {
-                id: colorBox
-                x: 12
-                y: 12
-                width: parent.width - 24
-                height: 74
+    GroupCard {
+        Column {
+            id: colorCol
+            x: 14
+            y: 12
+            width: parent.width - 28
+            spacing: 8
 
-                Text {
-                    x: 4
-                    y: 0
-                    text: "Colour"
-                    font { family: Theme.fontText; pixelSize: 11 }
-                    color: Theme.textSecondary
-                }
+            Flow {
+                width: parent.width
+                spacing: 8
 
-                Flow {
-                    x: 4
-                    y: 22
-                    width: parent.width - 8
-                    spacing: 8
-
-                    Repeater {
-                        model: {
-                            var c = eget("wallpaper.colors", [])
-                            var out = []
-                            for (var i = 0; i < c.length; i++) {
-                                var v = String(c[i])
-                                if (v === "add" || v.charAt(0) !== "#")
-                                    continue
-                                out.push(v)
-                            }
-                            if (out.length === 0)
-                                out = ["#6967B0", "#3E7CB1", "#8AB17D", "#D9A441", "#C46A6A"]
-                            return out
+                Repeater {
+                    model: {
+                        var c = eget("wallpaper.colors", [])
+                        var out = []
+                        for (var i = 0; i < c.length; i++) {
+                            var v = String(c[i])
+                            if (v === "add" || v.charAt(0) !== "#")
+                                continue
+                            out.push(v)
                         }
+                        if (out.length === 0)
+                            out = ["#000000", "#1C1C1E", "#6967B0", "#3E7CB1", "#2AC3DE", "#FF6B8B", "#8AB17D", "#D9A441", "#C46A6A", "#7AA2F7"]
+                        return out
+                    }
 
-                        delegate: Rectangle {
-                            id: swatch
-                            required property var modelData
-                            width: 34
-                            height: 34
-                            radius: 17
-                            color: modelData
-                            border.width: 3
-                            border.color: String(eget("wallpaper.path", "")).length === 0
-                                          && String(eget("wallpaper.color", "")) === modelData
-                                          ? Theme.accent : Qt.rgba(1, 1, 1, 0.30)
+                    delegate: Rectangle {
+                        id: swatch
+                        required property var modelData
+                        width: 32
+                        height: 32
+                        radius: 16
+                        color: modelData
+                        border.width: 2.5
+                        border.color: String(eget("wallpaper.path", "")).length === 0
+                                      && String(eget("wallpaper.color", "")) === modelData
+                                      ? Theme.accent : Qt.rgba(1, 1, 1, 0.25)
 
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: page.applyColor(swatch.modelData)
-                            }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: page.applyColor(swatch.modelData)
                         }
                     }
                 }
             }
+
+            Item { width: 1; height: 4 }
         }
     }
 
@@ -431,7 +410,8 @@ Column {
     }
 
     Row {
-        width: parent.width
+        x: 12
+        width: parent.width - 24
         spacing: 8
 
         MacButton {
@@ -468,6 +448,7 @@ Column {
 
             SectionHeader {
                 width: parent.width
+                text: sec.modelData.title
                 suffix: " (" + sec.modelData.files.length + ")"
                 buttonLabel: sec.modelData.add ? "Add Photo\u2026" : ""
                 onButtonClicked: addPhotoDlg.open()
