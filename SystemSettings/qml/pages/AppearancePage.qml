@@ -146,6 +146,9 @@ Column {
         Shell.eset("general.darkMode", dark)
         Shell.eset("general.autoDarkMode", m === "auto")
         Shell.eset("general.reduceMotion", ecfg("general.reduceMotion", false))
+        var scheme = dark ? "prefer-dark" : "prefer-light"
+        Shell.run("gsettings set org.gnome.desktop.interface color-scheme '" + scheme + "' >/dev/null 2>&1")
+        rev++
     }
 
     function setAccent(name, hex) {

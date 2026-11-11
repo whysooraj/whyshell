@@ -15,12 +15,23 @@
 #include <QSet>
 #include <QDateTime>
 
-const QString ShellCtl::userPath = QDir::homePath() + QStringLiteral("/.config/quickshell/macos/userconfig.json");
+const QString ShellCtl::userPath = []() {
+    QString p1 = QDir::homePath() + QStringLiteral("/.config/revo/quickshell/macos/userconfig.json");
+    if (QFile::exists(p1)) return p1;
+    QString p2 = QDir::homePath() + QStringLiteral("/.config/quickshell/macos/userconfig.json");
+    if (QFile::exists(p2)) return p2;
+    return p1;
+}();
+
 const QString ShellCtl::eqPath = QDir::homePath() + QStringLiteral("/.config/aureli/config.json");
 
 QString ShellCtl::shellDir() const
 {
-    return QDir::homePath() + QStringLiteral("/.config/quickshell/macos");
+    QString p1 = QDir::homePath() + QStringLiteral("/.config/revo/quickshell/macos");
+    if (QDir(p1).exists()) return p1;
+    QString p2 = QDir::homePath() + QStringLiteral("/.config/quickshell/macos");
+    if (QDir(p2).exists()) return p2;
+    return p1;
 }
 
 ShellCtl::ShellCtl(QObject *parent)
@@ -52,6 +63,8 @@ QVariantMap ShellCtl::readJson(const QString &path)
 
 bool ShellCtl::writeJson(const QString &path, const QVariantMap &map, int indent)
 {
+    QFileInfo fi(path);
+    QDir().mkpath(fi.absolutePath());
     const QJsonDocument doc(QJsonObject::fromVariantMap(map));
     const QByteArray bytes = doc.toJson(indent > 0 ? QJsonDocument::Indented : QJsonDocument::Compact);
     QFile f(path);
