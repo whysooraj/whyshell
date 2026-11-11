@@ -39,6 +39,7 @@ local function autostart()
     hl.exec_cmd("hypridle")
     hl.exec_cmd(HYPR_DIR .. "/scripts/wallpapers/set-random.sh &")
     hl.exec_cmd("hyprshade on vibrance")
+    hl.exec_cmd("python3 " .. HYPR_DIR .. "/scripts/dbusmenu_bridge.py &")
     hl.exec_cmd("skwd")
     hl.exec_cmd("~/.config/skwd/scripts/bash/restore-wallpaper")
 

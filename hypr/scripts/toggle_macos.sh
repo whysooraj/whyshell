@@ -26,6 +26,7 @@ start_my_shell() {
 }
 
 stop_macos() {
+    pkill -f "dbusmenu_bridge\.py" 2>/dev/null
     pkill -f "quickshell.*-p .*quickshell/macos" 2>/dev/null
     pkill -f "quickshell.*macos/shell\.qml" 2>/dev/null
     for _ in $(seq 1 20); do
@@ -35,6 +36,9 @@ stop_macos() {
 }
 
 start_macos() {
+    if ! pgrep -f "dbusmenu_bridge\.py" >/dev/null 2>&1; then
+        python3 "$HOME/.config/revo/hypr/scripts/dbusmenu_bridge.py" >/dev/null 2>&1 &
+    fi
     if ! pgrep -f "quickshell.*macos/shell\.qml" >/dev/null 2>&1; then
         quickshell -p "$MACOS_QML" >"$HOME/macos.log" 2>&1 &
     fi

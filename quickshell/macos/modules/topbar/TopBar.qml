@@ -145,8 +145,43 @@ PanelWindow {
         "afterfx.exe": ["file", "edit", "composition", "layer", "effect", "animation", "view", "window", "help"]
     })
 
+    property var dbusMenuData: ({ has_menu: false, top_menus: [], menus: {} })
+
+    Timer {
+        id: dbusMenuTimer
+        interval: 350
+        running: true
+        repeat: true
+        onTriggered: {
+            if (!_dbusMenuProc.running) _dbusMenuProc.running = true;
+        }
+    }
+
+    Process {
+        id: _dbusMenuProc
+        running: false
+        command: ["bash", "-c", "cat /tmp/whyshell_dbusmenu.json 2>/dev/null || echo '{\"has_menu\":false}'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                _dbusMenuProc.running = false;
+                try {
+                    const parsed = JSON.parse(text.trim());
+                    if (parsed && typeof parsed.has_menu === "boolean") {
+                        root.dbusMenuData = parsed;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
+    function triggerDbusMenu(itemId) {
+        root.run("python3 ~/.config/revo/hypr/scripts/dbusmenu_bridge.py --click " + itemId);
+    }
 
     readonly property var activeMenus: {
+        if (root.dbusMenuData && root.dbusMenuData.has_menu && root.dbusMenuData.top_menus && root.dbusMenuData.top_menus.length > 0) {
+            return root.dbusMenuData.top_menus.map(function(m) { return m.toLowerCase(); });
+        }
         const al = root.activeAppId;
         // Try exact match
         if (al in root.appMenuConfig) return root.appMenuConfig[al];
@@ -213,6 +248,20 @@ PanelWindow {
     }
 
     function menuItems(name) {
+        const nm = (name || "").toLowerCase();
+        if (root.dbusMenuData && root.dbusMenuData.has_menu && root.dbusMenuData.menus && root.dbusMenuData.menus[nm]) {
+            const rawItems = root.dbusMenuData.menus[nm];
+            return rawItems.map(function(item) {
+                if (item.sep) return { sep: true };
+                return {
+                    label: item.label,
+                    sub: item.sub || "",
+                    enabled: item.enabled,
+                    onClick: () => root.triggerDbusMenu(item.id)
+                };
+            });
+        }
+
         const aid = ToplevelManager.activeToplevel?.appId ?? "";
         const al = aid.toLowerCase();
         const appName = root.activeAppName;
@@ -546,7 +595,7 @@ PanelWindow {
                 { label: "Search", sub: "Super+Space", onClick: () => { root.closeAllMenus(); ShellController.toggle("spotlight"); } },
                 { label: "Hyprland Keybinds", sub: "", onClick: () => root.run("hyprctl binds | zenity --text-info --title='Hyprland Keybinds' 2>/dev/null || true") },
                 { sep: true },
-                { label: "About Revo Shell", onClick: () => ShellController.openAbout() }
+                { label: "About whyShell", onClick: () => ShellController.openAbout() }
             ];
         }
 
