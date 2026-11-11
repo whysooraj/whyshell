@@ -1,162 +1,60 @@
-# Revo Shell Dotfiles
+# whyShell
 
-Revo Shell its place to Add all ypur quickShells in one place
-
-if you share any video to this dot files in tik tok or insta pleas mention me : @_flz4
+whyShell is an opinionated, hardware-accelerated Wayland desktop shell built on Hyprland, Quickshell, and Qt6, crafted with macOS Sonoma and Tahoe liquid glass aesthetics.
 
 ## Showcase
 
-https://github.com/user-attachments/assets/42df3de9-9fab-4843-9afc-35f82d5852f7
+- Unified TopBar with active application menus, battery, audio, and control center toggles.
+- Liquid glass Dock with smooth magnification, running indicators, and minimized window thumbnails.
+- Authentic macOS Sonoma lock screen with bold rounded typography, drop shadows, frosted glass password pill, and full customization via System Settings or CLI.
+- Native Qt6 System Settings app (`~/.local/bin/systemsettings`) with direct reactive configuration.
+- Spotlight launcher (`Super + Space`) and full-screen Launchpad.
 
-## Layout
+## Repository Layout
 
-| Path | Deploy target |
-|------|----------------|
-| `hypr/` | `~/.config/hypr` |
-| `quickshell/` | `~/.config/quickshell` |
-| `wallpapers/` | `~/Pictures/Wallpapers` |
-| `rofi/` | `~/.config/rofi` |
-| `kitty/` | `~/.config/kitty` |
-| `SystemSettings/` | built → `~/.local/bin/systemsettings` |
-| `install.sh` | **run this (CLI)** |
-| `update` / `update.sh` | **run this to pull new additions** |
-| `qs-gui-installer/` | run this (GUI) |
+| Path | Target | Description |
+|------|--------|-------------|
+| `hypr/` | `~/.config/hypr` | Hyprland compositor configuration, keybinds, and scripts |
+| `quickshell/` | `~/.config/quickshell` | Quickshell modules (macos, ii, lucid, etc.) |
+| `SystemSettings/` | built -> `~/.local/bin/systemsettings` | Native Qt6 macOS-style System Settings app |
+| `wallpapers/` | `~/Pictures/Wallpapers` | Bundled wallpapers (Sonoma, Sequoia, M3) |
+| `rofi/` | `~/.config/rofi` | Window switcher and application launcher theme |
+| `kitty/` | `~/.config/kitty` | Terminal emulator configuration with SF Mono fonts |
+| `install.sh` | `./install.sh` | Automated installer script |
 
-## Install (CLI — recommended)
+## Installation
 
-One-time clone, then run the installer:
+Clone the repository and run the installer:
 
 ```bash
-git clone https://github.com/vzbc/revo-shell.git revo-shell
-cd revo-shell
+git clone https://github.com/whysooraj/whyshell.git ~/.local/share/whyshell/src
+cd ~/.local/share/whyshell/src
 ./install.sh
 ```
 
-On a TTY you get a **multi-select shell menu** (same idea as the GUI Stage 3):
-
-```text
-select Quickshell shells to install (multi-select)
-  [0] all
-  [1] ii
-  [2] lucid
-  [3] macos
-  …
-Enter numbers (e.g. 1,3,5), names, or "all" [all]:
-```
-
-**A fresh install always says what to deploy**: non-interactive runs (scripts, no TTY) need `--shells` — the installer refuses to guess and deploys only what you picked (the first shell becomes the default). Re-running without `--shells` re-applies your previous choice, so updates keep working.
-
-What `install.sh` does:
-
-1. Lets you pick which shells to install (menu / `--shells` — required on a fresh install; you get only what you pick)
-2. Detects your package manager (pacman / apt / dnf)
-3. Installs **system packages** needed by the installer and shells
-4. Installs AUR packages via yay/paru when available (`quickshell-git`, fonts, …)
-5. Installs Python deps (`pip --user`)
-6. Deploys `hypr/`, selected `quickshell/` shells (+ shared root assets), `rofi/`, `kitty/` → `~/.config/`, `wallpapers/` → `~/Pictures/Wallpapers`
-7. Sets the **first selected shell** as the Hyprland default (`# REVO_DEFAULT_SHELL` in autostart) — a previously saved default is re-applied on updates
-8. Rewrites hardcoded `/home/revo` → `$HOME`
-9. Builds CMake shells (caelestia + Clavis) and the **SystemSettings** app → `~/.local/bin/systemsettings`
-10. Enables pipewire / NetworkManager / bluetooth
-11. Installs **hyprpm plugins** — adds the `hyprliquid` + `Hypr3D` repos, enables the liquid-glass engine, and points `hyprland.conf` / `hyprland.lua` at the per-user plugin `.so` files in `/var/cache/hyprpm/$USER/`. `HyprGlass` is **skipped by default** (its build hangs on fresh installs and `hyprliquid` is the engine the configs enable — `WITH_HYPRGLASS=1 ./install.sh` adds it back). Plugin builds are **bounded by `HYPRPM_TIMEOUT` (default 600s)**, so a slow or hanging `hyprpm add` is abandoned and the install still finishes; plugins are optional, the desktop works without them (`./install.sh --check` retries).
-12. **Verifies every requirement** — prints `[ok]` / `[MISS]` / `[fixed]` for each, **auto-installs any missing package** (pacman / apt / dnf + yay/paru for AUR)
-13. **Health check** — proves the result actually works: `hyprpm` + its repos, the default-shell marker, the deployed `autostart.lua` (the old `h.` build killed the config at login), the shell process, QML errors in its log, leftover `/home/revo` paths — each failure prints the exact fix command
-14. **Starts your shell if it is down** — whatever failed earlier, the selected shell is deployed first and (re)started at the end so you always land on a working desktop
-
-Flags:
+### Building System Settings Manually
 
 ```bash
-./install.sh --shells macos          # fresh install: one shell (it becomes the default)
-./install.sh --shells macos,ii,lucid # deploy only these shells (first = default)
-./install.sh --shells all            # every shell (explicit — never the default)
-./install.sh --check                 # read-only health check (exit 1 if broken)
-./install.sh --help
-DRY_RUN=1 ./install.sh --shells ii   # dry-run selective deploy
-DOTFILES_REPO_URL=... ./install.sh   # override clone URL
-SHELLS=macos,ii ./install.sh         # env form of --shells
-HYPRPM_TIMEOUT=1800 ./install.sh     # give slow plugin builds more time
+cd SystemSettings
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+install -m755 build/systemsettings ~/.local/bin/systemsettings
 ```
 
-After install, verify again anytime — including **when the desktop comes up
-empty** (wallpaper but no dock/bar, missing hyprpm repos):
+### Lock Screen Customization CLI
+
+Configure your lock screen directly from terminal:
 
 ```bash
-./install.sh --check   # read-only: what is broken + the command that fixes it
-./install.sh           # re-runs verify + health check (no --shells → re-applies your choice)
+whyshell-lock-config --status
+whyshell-lock-config --wallpaper sonoma-light
+whyshell-lock-config --clock 12h
+whyshell-lock-config --dim 0.12
+whyshell-lock-config --reset
 ```
 
+Or configure it visually in System Settings -> Lock Screen.
 
-## Update (existing installs)
+## Author
 
-Already have revo-shell installed? Use the **update** CLI to pull the newest
-additions (new shells, hyprpm plugins, SystemSettings, config fixes):
-
-```bash
-./update                     # git pull --ff-only + re-apply install.sh
-./update --no-pull           # only re-apply local files
-./update --shells macos,ii   # re-apply specific shells only
-DRY_RUN=1 ./update           # show what would run, change nothing
-```
-
-`update` is a thin wrapper around `update.sh`, which runs `git pull` (skipped
-automatically if the tree is dirty or you are offline) and then
-`NO_SHELL_PROMPT=1 ./install.sh`, so your previously chosen default shell and
-plugin setup are preserved.
-
-Launch a shell:
-
-```bash
-qs -p ~/.config/quickshell/lucid
-qs -p ~/.config/quickshell/brain_shell
-```
-
-## Install (GUI)
-
-```bash
-git clone https://github.com/vzbc/revo-shell.git revo-shell
-cd revo-shell/qs-gui-installer
-pip install -r requirements.txt
-python main.py
-```
-
-The GUI **full install** does everything:
-
-1. System packages (pacman/apt/dnf) for **every** shell  
-2. **rofi + kitty** installed if missing (`--needed`)  
-3. AUR (`quickshell-git`, `awww`, fonts, …) when available  
-4. Python deps (`pip --user`, Q1/nibrasshell requirements)  
-5. `git clone` monorepo → deploy `hypr/`, `quickshell/`, `wallpapers/`, **`rofi/`, `kitty/`**  
-6. Rewrite hardcoded `/home/revo` → `$HOME`  
-7. **Build** CMake shells (`shell` caelestia + `imported-1789667132` Clavis)  
-8. Enable pipewire / NetworkManager / bluetooth  
-9. Per-file backup — existing configs are never blindly deleted  
-
-Logs: `~/.local/state/qs-gui-installer/install.log`
-
-Enter your sudo password in Stage 4 → **Install Now**.
-
-## After clone — repo URL
-
-Already set in `qs-gui-installer/main.py`:
-
-```python
-DOTFILES_REPO_URL = "https://github.com/vzbc/revo-shell.git"
-```
-
-## Safety
-
-- `.env` and API keys are **gitignored** (never commit secrets)  
-- Existing user files: backed up before merge  
-- Backups: `~/.config/revo-shell-backup-*` and `/tmp/dotfiles_backup`  
-
-## Shells
-
-Launch after install:
-
-```bash
-qs -p ~/.config/quickshell/lucid
-qs -p ~/.config/quickshell/brain_shell
-# …or pick any folder under ~/.config/quickshell
-```
-
-C++ shells (`shell`, `imported-1789667132`) are built during install.
+Created and maintained by whysooraj.

@@ -5,9 +5,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TS="$(date +%Y%m%d_%H%M%S)"
-BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.config/revo-shell-backup-$TS}"
+BACKUP_ROOT="${BACKUP_ROOT:-$HOME/.config/whyshell-backup-$TS}"
 DRY_RUN="${DRY_RUN:-0}"
-REPO_URL="${DOTFILES_REPO_URL:-https://github.com/vzbc/revo-shell.git}"
+REPO_URL="${DOTFILES_REPO_URL:-https://github.com/whysooraj/whyshell.git}"
 SUDO="${SUDO:-sudo}"
 SHELLS_FLAG="${SHELLS_FLAG:-}"
 SHELLS_EXPLICIT="${SHELLS_EXPLICIT:-0}"

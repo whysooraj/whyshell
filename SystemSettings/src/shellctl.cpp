@@ -16,22 +16,26 @@
 #include <QDateTime>
 
 const QString ShellCtl::userPath = []() {
+    QString p0 = QDir::homePath() + QStringLiteral("/.config/whyshell/quickshell/macos/userconfig.json");
+    if (QFile::exists(p0)) return p0;
     QString p1 = QDir::homePath() + QStringLiteral("/.config/revo/quickshell/macos/userconfig.json");
     if (QFile::exists(p1)) return p1;
     QString p2 = QDir::homePath() + QStringLiteral("/.config/quickshell/macos/userconfig.json");
     if (QFile::exists(p2)) return p2;
-    return p1;
+    return p0;
 }();
 
 const QString ShellCtl::eqPath = QDir::homePath() + QStringLiteral("/.config/aureli/config.json");
 
 QString ShellCtl::shellDir() const
 {
+    QString p0 = QDir::homePath() + QStringLiteral("/.config/whyshell/quickshell/macos");
+    if (QDir(p0).exists()) return p0;
     QString p1 = QDir::homePath() + QStringLiteral("/.config/revo/quickshell/macos");
     if (QDir(p1).exists()) return p1;
     QString p2 = QDir::homePath() + QStringLiteral("/.config/quickshell/macos");
     if (QDir(p2).exists()) return p2;
-    return p1;
+    return p0;
 }
 
 ShellCtl::ShellCtl(QObject *parent)

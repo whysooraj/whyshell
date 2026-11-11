@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-revo-lock-config: Customize Revo Shell macOS Lock Screen
+whyshell-lock-config: Customize whyShell macOS Lock Screen
 """
 
 import os
@@ -57,7 +57,7 @@ def show_status(cfg):
     power = lock_cfg.get("showPowerButton", DEFAULT_LOCK_CONFIG["showPowerButton"])
     dim = lock_cfg.get("dimOpacity", DEFAULT_LOCK_CONFIG["dimOpacity"])
 
-    print("=== Revo macOS Lock Screen Configuration ===")
+    print("=== whyShell macOS Lock Screen Configuration ===")
     print(f"  Wallpaper:         {wall}")
     print(f"  Avatar:            {avatar}")
     print(f"  Clock Format:      {clock}")

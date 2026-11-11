@@ -415,14 +415,15 @@ PopupWindow {
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "\u2122 and \u00A9 1983\u20132026 Apple Inc."
-                    color: Appearance.fgFaint
+                    text: "whyShell by whysooraj"
+                    color: Appearance.fgDim
                     font.family: aboutWindow.fontFamily
-                    font.pixelSize: 10
+                    font.pixelSize: 11
+                    font.bold: true
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "All Rights Reserved."
+                    text: "\u00A9 2026 whysooraj. All Rights Reserved."
                     color: Appearance.fgFaint
                     font.family: aboutWindow.fontFamily
                     font.pixelSize: 10
