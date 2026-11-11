@@ -166,10 +166,11 @@ Column {
     }
 
     function sideEffects(row, val) {
-        if (row.cmd !== undefined && row.cmd.length > 0)
-            Shell.run(typeof val === "string" && row.cmdFmt !== undefined
-                      ? row.cmdFmt.split("{v}").join(val)
-                      : row.cmd)
+        var strVal = String(val)
+        if (row.cmdFmt !== undefined && row.cmdFmt.length > 0)
+            Shell.run(row.cmdFmt.split("{v}").join(strVal))
+        else if (row.cmd !== undefined && row.cmd.length > 0)
+            Shell.run(row.cmd)
         if (row.ipct !== undefined)
             Shell.ipc(row.ipct, row.ipcf, row.ipca !== undefined ? row.ipca : [])
         if (row.run !== undefined && row.run.length > 0)
@@ -183,6 +184,11 @@ Column {
 
     function readBool(row) {
         bumpU; bumpE
+        if (row.cfg === "focus.dnd") {
+            var dndOut = Shell.execOut("swaync-client -D", 300).trim()
+            if (dndOut === "true") return true
+            if (dndOut === "false") return false
+        }
         if (row.cfg !== undefined)
             return Shell.uget(row.cfg, row.def !== undefined ? row.def : false) === true
         if (row.ecfg !== undefined)
@@ -321,7 +327,8 @@ Column {
         ip: Shell.execOut("ip -4 -o addr show scope global 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1", 1500),
         uptime: Shell.execOut("uptime -p 2>/dev/null | sed \"s/^up //\"", 1500),
         country: Shell.execOut("locale -k country_name 2>/dev/null | awk -F'\"' \'/country_name/{print $2; exit}\'", 1500),
-        lang: Shell.execOut("locale -k language 2>/dev/null | awk -F'\"' \'/language/{print $2; exit}\'", 1500)
+        lang: Shell.execOut("locale -k language 2>/dev/null | awk -F'\"' \'/language/{print $2; exit}\'", 1500),
+        gpu: Shell.execOut("lspci 2>/dev/null | grep -E -i 'vga|3d' | head -2 | sed -E 's/.*: //' | paste -sd ' / ' -", 1500)
         })
         return _live
     }
@@ -341,7 +348,8 @@ Column {
         var map = { "{host}": L.host, "{user}": L.user, "{model}": L.model,
                     "{serial}": L.serial, "{cpu}": L.cpu, "{ram}": L.ram,
                     "{os}": L.os, "{kernel}": L.kernel, "{ip}": L.ip,
-                    "{uptime}": L.uptime, "{country}": L.country, "{lang}": L.lang }
+                    "{uptime}": L.uptime, "{country}": L.country, "{lang}": L.lang,
+                    "{gpu}": L.gpu }
         for (var k in map) {
             if (s.indexOf(k) >= 0)
                 s = s.split(k).join(map[k] && map[k].length > 0 ? map[k] : "\u2014")

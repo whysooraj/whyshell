@@ -35,7 +35,7 @@ Rectangle {
                 { id: "accessibility", title: "Accessibility", icon: "sb_accessibility" },
                 { id: "appearance", title: "Appearance", icon: "sb_dark-mode" },
                 { id: "menuBar", title: "Menu Bar", icon: "sb_controlcenter.settings" },
-                { id: "siri", title: "Apple Intelligence & Siri", icon: "sb_apple-intelligence" },
+                { id: "gemini", title: "Gemini Intelligence", icon: "sb_apple-intelligence" },
                 { id: "desktopDock", title: "Desktop & Dock", icon: "sb_desktop" },
                 { id: "displays", title: "Displays", icon: "sb_display" },
                 { id: "spotlight", title: "Spotlight", icon: "sb_spotlight" },
@@ -58,15 +58,6 @@ Rectangle {
                 { id: "privacySecurity", title: "Privacy & Security", icon: "sb_privacy" },
                 { id: "touchIDPassword", title: "Touch ID & Password", icon: "sb_touch-id" },
                 { id: "usersGroups", title: "Users & Groups", icon: "sb_group" }
-            ]
-        },
-        {
-            name: "service",
-            items: [
-                { id: "internetAccounts", title: "Internet Accounts", icon: "sb_accounts" },
-                { id: "gameCenter", title: "Game Center", icon: "sb_gamecenter" },
-                { id: "icloud", title: "iCloud", icon: "sb_icloud" },
-                { id: "walletApplePay", title: "Wallet & Apple Pay", icon: "sb_wallet" }
             ]
         },
         {

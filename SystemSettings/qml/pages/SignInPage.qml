@@ -368,82 +368,58 @@ Column {
             }
             DetailRow {
                 separator: true
-                title: "Sign-In & Security"
+                title: "Login Password"
+                subtitle: "Change UNIX account password"
                 iconFile: "dt_security"
                 chevron: true
-                onClicked: page.navigate("acct.security")
-            }
-            DetailRow {
-                separator: true
-                title: "Payment & Shipping"
-                iconFile: "dt_payment"
-                chevron: true
-                onClicked: page.navigate("acct.payment")
-            }
-        }
-
-        GroupCard {
-            DetailRow {
-                title: "iCloud"
-                iconFile: "dt_icloud"
-                chevron: true
-                onClicked: page.navigate("icloud")
-            }
-            DetailRow {
-                separator: true
-                title: "Family"
-                iconFile: "dt_family"
-                chevron: true
-                onClicked: page.navigate("acct.family")
-            }
-            DetailRow {
-                separator: true
-                title: "Media & Purchases"
-                iconFile: "dt_media"
-                chevron: true
-                onClicked: page.navigate("acct.media")
-            }
-            DetailRow {
-                separator: true
-                title: "Find My"
-                iconFile: "dt_findmy"
-                chevron: true
-                onClicked: page.navigate("acct.findMy")
-            }
-        }
-
-        GroupCard {
-            DetailRow {
-                title: "Sign in with Apple"
-                iconFile: "dt_signin-apple"
-                chevron: true
-                onClicked: page.navigate("acct.signinWithApple")
+                onClicked: Shell.run("kitty --title 'Change Password' -e passwd")
             }
         }
 
         SectionHeader {
-            text: "Devices"
+            text: "Linked Accounts"
         }
 
         GroupCard {
             DetailRow {
-                title: (page.accountName.length > 0 ? page.accountName : "My") + "'s Mac"
-                subtitle: "This Mac Pro"
+                title: "GitHub"
+                subtitle: "Connected via GitHub CLI (whysooraj)"
+                value: "Active"
+                chevron: true
+                onClicked: Shell.run("xdg-open https://github.com/whysooraj")
+            }
+            DetailRow {
+                separator: true
+                title: "Git Configuration"
+                subtitle: "View git user.name and user.email"
+                value: page.accountEmail
+                chevron: true
+                onClicked: Shell.run("kitty --title 'Git Config' -e git config --list --show-origin")
+            }
+        }
+
+        SectionHeader {
+            text: "System Information"
+        }
+
+        GroupCard {
+            DetailRow {
+                title: "Machine"
+                subtitle: Shell.execOut("cat /sys/class/dmi/id/product_name 2>/dev/null", 500).trim()
+                value: Shell.execOut("hostname", 500).trim()
                 iconFile: "macpro"
                 chevron: true
-                onClicked: page.navigate("acct.deviceDetails")
+                onClicked: page.navigate("gen.about")
             }
-        }
-
-        GroupCard {
             DetailRow {
-                title: "Sign Out\u2026"
-                titleColor: Theme.red
-                onClicked: confirmSignOut.open()
+                separator: true
+                title: "Shell"
+                subtitle: "Default login shell"
+                value: Shell.execOut("echo $SHELL", 500).trim()
             }
         }
 
-        Item { width: 1; height: 2 }
+        Item { width: 1; height: 12 }
     }
 
     FileDialog {

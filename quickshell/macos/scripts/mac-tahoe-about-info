@@ -1,21 +1,106 @@
 #!/usr/bin/env python3
-import json, random, string
+import os, platform, subprocess, shutil, json
 
-serial = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
+def get_info():
+    # CPU
+    cpu = "Unknown"
+    try:
+        for line in open("/proc/cpuinfo"):
+            if "model name" in line:
+                cpu = line.split(":", 1)[1].strip()
+                break
+    except Exception:
+        pass
 
-info = {
-    "vendor": "MacBook Pro",
-    "model": "16-inch, M5",
-    "year": "",
-    "chip": "Apple M5",
-    "cores": "",
-    "memory": "64 GB",
-    "graphics": "",
-    "disk": "",
-    "network": "",
-    "serial": serial,
-    "os": "Tahoe 26.5",
-    "theme_version": ""
-}
+    # Cores
+    cores_num = os.cpu_count() or 1
+    cores = f"{cores_num} cores"
 
-print(json.dumps(info))
+    # RAM
+    ram = "Unknown"
+    try:
+        for line in open("/proc/meminfo"):
+            if "MemTotal" in line:
+                kb = int(line.split()[1])
+                ram = f"{round(kb / (1024 * 1024))} GB"
+                break
+    except Exception:
+        pass
+
+    # GPU
+    gpu = "Integrated Graphics"
+    try:
+        out = subprocess.check_output("lspci | grep -iE 'vga|3d|display'", shell=True).decode()
+        gpus = []
+        for l in out.strip().split("\n"):
+            if not l: continue
+            desc = l.split(": ", 1)[-1].split(" (rev")[0].strip()
+            # Clean up long vendor strings
+            desc = desc.replace("Corporation ", "").replace("Semiconductor Co., Ltd. ", "")
+            gpus.append(desc)
+        if gpus:
+            gpu = " / ".join(gpus)
+    except Exception:
+        pass
+
+    # OS
+    os_name = "Arch Linux"
+    try:
+        for line in open("/etc/os-release"):
+            if line.startswith("PRETTY_NAME="):
+                os_name = line.split("=", 1)[1].strip("\"'\n")
+                break
+    except Exception:
+        pass
+    kernel = platform.release()
+
+    # Disk
+    disk = "Unknown"
+    try:
+        total, used, free = shutil.disk_usage("/")
+        disk = f"{round(total / (1024**3))} GB ({round(free / (1024**3))} GB available)"
+    except Exception:
+        pass
+
+    # Hardware vendor & model
+    model = platform.node()
+    vendor = "Linux PC"
+    try:
+        if os.path.exists("/sys/devices/virtual/dmi/id/product_name"):
+            p = open("/sys/devices/virtual/dmi/id/product_name").read().strip()
+            if p and p != "None":
+                model = p
+        if os.path.exists("/sys/devices/virtual/dmi/id/sys_vendor"):
+            v = open("/sys/devices/virtual/dmi/id/sys_vendor").read().strip()
+            if v and v != "None":
+                vendor = v
+    except Exception:
+        pass
+
+    # Serial
+    serial = "Not Available"
+    try:
+        if os.path.exists("/sys/devices/virtual/dmi/id/product_serial"):
+            s = open("/sys/devices/virtual/dmi/id/product_serial").read().strip()
+            if s and s not in ("None", "Default string"):
+                serial = s
+    except Exception:
+        pass
+
+    return {
+        "vendor": vendor,
+        "model": model,
+        "year": "",
+        "chip": cpu,
+        "cores": cores,
+        "memory": ram,
+        "graphics": gpu,
+        "disk": disk,
+        "network": "",
+        "serial": serial,
+        "os": f"{os_name} ({kernel})",
+        "theme_version": "Revo macOS Tahoe"
+    }
+
+if __name__ == "__main__":
+    print(json.dumps(get_info()))

@@ -3,25 +3,19 @@
 // Generic settings content: blocks -> { header?, note?, rows: [...] }
 // row: { t, s?, i?, v?, c?, to?, sw?, on?, red?, dim?, info? }
 var content = {
-    // ============ Apple Account ============
+    // ============ User Account ============
     "acct.personalInfo": [
         { rows: [
-            { t: "Name", v: "{name}", to: "acct.personalInfo.name" },
-            { t: "Phone Numbers", v: "Add", to: "acct.personalInfo.phone" },
+            { t: "Username", v: "{user}" },
+            { t: "Host", v: "{host}" },
             { t: "Email", v: "{email}", to: "acct.personalInfo.email" },
-            { t: "Country / Region", v: "{country}", to: "acct.personalInfo.country" },
-            { t: "Date of Birth", to: "acct.personalInfo.birth" }
-        ] },
-        { header: "Family Sharing", rows: [
-            { t: "My Info", v: "{name}", to: "acct.personalInfo.myInfo" }
+            { t: "Country / Region", v: "{country}", to: "acct.personalInfo.country" }
         ] }
     ],
-    "acct.personalInfo.name": [ { rows: [ { t: "First Name", v: "{name}" }, { t: "Last Name" } ] } ],
-    "acct.personalInfo.phone": [ { rows: [ { t: "Add Phone Number…", red2: true } ], note: "Verified phone numbers can be used to sign in, reset your password, and recover your account." } ],
+    "acct.personalInfo.name": [ { rows: [ { t: "Username", v: "{user}" } ] } ],
+    "acct.personalInfo.phone": [ { rows: [ { t: "Add Phone Number…", red2: true } ] } ],
     "acct.personalInfo.email": [ { rows: [ { t: "{email}", s: "Primary" } ] } ],
-    "acct.personalInfo.country": [ { rows: [ { t: "Country or Region", v: "{country}" }, { t: "Language", v: "{lang}" } ], note: "Detected from this Mac\u2019s system region settings." } ],
-    "acct.personalInfo.birth": [ { rows: [ { t: "Day" }, { t: "Month" }, { t: "Year" } ] } ],
-    "acct.personalInfo.myInfo": [ { rows: [ { t: "Name", v: "{name}" }, { t: "Email", v: "{email}" } ] } ],
+    "acct.personalInfo.country": [ { rows: [ { t: "Country or Region", v: "{country}" }, { t: "Language", v: "{lang}" } ], note: "Detected from system region settings." } ],
 
     "acct.security": [
         { rows: [
@@ -133,28 +127,29 @@ var content = {
     // ============ General ============
     "gen.about": [
         { rows: [
-            { t: "Name", v: "{name}'s Mac Pro", to: "gen.about.name" },
-            { t: "Chip", v: "Apple M4 Max" },
-            { t: "Memory", v: "64 GB" },
-            { t: "Serial Number", v: "C02XK1ABCDEFG" },
-            { t: "macOS", v: "Tahoe 26.1", to: "gen.about.version" }
+            { t: "Model", v: "{model}", to: "gen.about.name" },
+            { t: "Processor", v: "{cpu}" },
+            { t: "Graphics", v: "{gpu}" },
+            { t: "Memory", v: "{ram}" },
+            { t: "Serial Number", v: "{serial}" },
+            { t: "Operating System", v: "{os}", to: "gen.about.version" },
+            { t: "Kernel", v: "{kernel}" },
+            { t: "Uptime", v: "{uptime}" }
         ] },
         { rows: [
-            { t: "Storage", v: "{storage}", to: "gen.storage" },
-            { t: "Coverage", v: "Limited Coverage", to: "gen.appleCare" }
+            { t: "Storage", v: "{storage}", to: "gen.storage" }
         ] },
         { rows: [
-            { t: "System Report…", c: true },
-            { t: "Regulatory Certification…", c: true }
+            { t: "System Report…", c: true, cmd: "kitty --title 'System Info' -e fastfetch" }
         ] }
     ],
-    "gen.about.name": [ { rows: [ { t: "Computer Name", v: "{name}'s Mac Pro" } ] } ],
+    "gen.about.name": [ { rows: [ { t: "Computer Name", v: "{host}" } ] } ],
     "gen.about.version": [
         { rows: [
-            { t: "macOS Tahoe", v: "26.1" },
-            { t: "Build", v: "25B78" }
-        ] },
-        { note: "macOS Tahoe brings a new Liquid Glass design, Live Activities, and more." }
+            { t: "Distribution", v: "{os}" },
+            { t: "Kernel", v: "{kernel}" },
+            { t: "Uptime", v: "{uptime}" }
+        ] }
     ],
 
     "gen.softwareUpdate": [
@@ -1128,22 +1123,16 @@ content["sound"] = [
 ]
 
 content["focus"] = [
-    { header: "Focus", rows: [
-        { t: "Do Not Disturb", sw: false, on: false, to: "focus.schedules" },
-        { t: "Work", sw: false, on: false, to: "focus.schedules" },
-        { t: "Personal", sw: false, on: false, to: "focus.schedules" },
-        { t: "Sleep", sw: false, on: false, to: "focus.schedules" }
+    { header: "Do Not Disturb", rows: [
+        { t: "Do Not Disturb", s: "Silence all desktop notifications", sw: true, cfg: "focus.dnd", def: false,
+          cmdFmt: "sh -c 'if [ \"{v}\" = \"true\" ]; then swaync-client -dn; else swaync-client -df; fi'" }
     ] },
-    { header: "Focus Status", rows: [
-        { t: "Share Focus status", sw: true, on: true },
-        { t: "Focus filters", c: true, to: "focus.filters" }
+    { header: "Notification Center", rows: [
+        { t: "Toggle Notification Panel", s: "Open swaync control center", c: true, cmd: "swaync-client -t" },
+        { t: "Clear All Notifications", s: "Dismiss all active alerts", c: true, cmd: "swaync-client -C" },
+        { t: "Reload Notification Daemon", s: "Restart swaync config", c: true, cmd: "swaync-client -R" }
     ] },
-    { header: "Options", rows: [
-        { t: "Share across devices", sw: true, on: true, to: "focus.iCloud" },
-        { t: "Smart Activation", sw: false, on: false },
-        { t: "Add Schedule…", c: true, to: "focus.schedules" }
-    ] },
-    { note: "When a Focus is on, notifications from apps and people will be silenced." }
+    { note: "When Do Not Disturb is active, notifications will be silenced and stored in Notification Center." }
 ]
 
 content["screenTime"] = [
@@ -1344,33 +1333,26 @@ content["walletApplePay"] = [
 ]
 
 content["keyboard"] = [
-    { rows: [
-        { t: "Key Repeat Rate", v: "Fast" },
-        { t: "Delay Until Repeat", v: "Short" },
-        { t: "Adjust keyboard brightness in low light", sw: true, on: true }
+    { header: "Key Repeat", rows: [
+        { t: "Key Repeat Rate", s: "Speed at which keys repeat when held", sl: true, min: 10, max: 80, step: 5, cfg: "keyboard.repeatRate", def: 35, fmt: "{v} /s", cmdFmt: "hyprctl keyword input:repeat_rate {v}" },
+        { t: "Delay Until Repeat", s: "Delay before a held key starts repeating", sl: true, min: 150, max: 800, step: 25, cfg: "keyboard.repeatDelay", def: 300, fmt: "{v} ms", cmdFmt: "hyprctl keyword input:repeat_delay {v}" }
     ] },
-    { header: "Text Input", rows: [
-        { t: "Input Sources", c: true, to: "keyboard.input" },
-        { t: "Dictation", sw: false, on: false, to: "keyboard.dictation" },
-        { t: "Text Replacements…", c: true, to: "keyboard.textReplacements" }
-    ] },
-    { header: "Shortcuts", rows: [
-        { t: "Keyboard Shortcuts…", c: true, to: "keyboard.input" },
-        { t: "Modifier keys…", c: true, to: "keyboard.hardware" },
-        { t: "Turn keyboard backlight off after inactivity", v: "5 seconds" }
+    { header: "Keyboard Layout & Shortcuts", rows: [
+        { t: "Layout", v: "us", to: "keyboard.input" },
+        { t: "Hyprland Keybinds Config", s: "~/.config/revo/hypr/configs/keybinds.lua", c: true, cmd: "kitty --title 'Keybinds' -e nvim ~/.config/revo/hypr/configs/keybinds.lua" }
     ] }
 ]
 
 content["trackpad"] = [
-    { rows: [
-        { t: "Point & Click", c: true, to: "trackpad.pointClick" },
-        { t: "Scroll & Zoom", c: true, to: "trackpad.scrollZoom" },
-        { t: "More Gestures", c: true, to: "trackpad.moreGestures" }
+    { header: "Point & Click", rows: [
+        { t: "Tap to Click", s: "Tap with one finger to click", sw: true, cfg: "touchpad.tapToClick", def: true, cmdFmt: "hyprctl keyword input:touchpad:tap-to-click {v}" },
+        { t: "Natural Scrolling", s: "Content tracks finger movement", sw: true, cfg: "touchpad.naturalScroll", def: true, cmdFmt: "hyprctl keyword input:touchpad:natural_scroll {v}" },
+        { t: "Tracking Speed", s: "Cursor sensitivity", sl: true, min: -1.0, max: 1.0, step: 0.1, cfg: "touchpad.sensitivity", def: 0.0, fmt: "{v}", cmdFmt: "hyprctl keyword input:sensitivity {v}" },
+        { t: "Scroll Speed Factor", s: "Touchpad scrolling multiplier", sl: true, min: 0.2, max: 2.0, step: 0.1, cfg: "touchpad.scrollFactor", def: 1.0, fmt: "{v}x", cmdFmt: "hyprctl keyword input:touchpad:scroll_factor {v}" }
     ] },
-    { header: "Accessibility", rows: [
-        { t: "Silent clicking", sw: false, on: false },
-        { t: "Force Click and haptic feedback", sw: true, on: true },
-        { t: "Tracking speed", v: "Normal" }
+    { header: "Gestures", rows: [
+        { t: "3 & 4-Finger Workspace Swipe", s: "Swipe with 3 or 4 fingers to switch workspaces", sw: true, cfg: "touchpad.workspaceSwipe", def: true },
+        { t: "Invert Swipe Direction", s: "Invert workspace swipe direction", sw: true, cfg: "touchpad.swipeInvert", def: true, cmdFmt: "hyprctl keyword gestures:workspace_swipe_invert {v}" }
     ] }
 ]
 

@@ -144,7 +144,7 @@ Item {
 
             onStatusChanged: {
                 if (status === Loader.Error)
-                    console.log("PAGE LOAD ERROR:", source)
+                    console.log("PAGE LOAD ERROR:", source, errorString())
             }
         }
 

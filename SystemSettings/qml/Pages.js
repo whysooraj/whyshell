@@ -2,14 +2,13 @@
 
 // Root pages (sidebar destinations)
 var roots = ["appleId", "wifi", "bluetooth", "network", "battery", "energy",
-    "general", "accessibility", "appearance", "menuBar", "siri", "desktopDock",
+    "general", "accessibility", "appearance", "menuBar", "gemini", "desktopDock",
     "displays", "spotlight", "wallpaper", "notifications", "sound", "focus",
     "screenTime", "lockScreen", "privacySecurity", "touchIDPassword",
-    "usersGroups", "internetAccounts", "gameCenter", "icloud", "walletApplePay",
-    "keyboard", "trackpad", "printersScanners"]
+    "usersGroups", "keyboard", "trackpad", "printersScanners"]
 
 var info = {
-    appleId: { title: "Sign in", icon: "sb_signin", root: true },
+    appleId: { title: "User Account", icon: "sb_signin", root: true },
     wifi: { title: "Wi-Fi", icon: "sb_wifi", root: true },
     bluetooth: { title: "Bluetooth", icon: "sb_bluetooth", root: true },
     network: { title: "Network", icon: "sb_local-network", root: true },
@@ -19,7 +18,7 @@ var info = {
     accessibility: { title: "Accessibility", icon: "sb_accessibility", root: true },
     appearance: { title: "Appearance", icon: "sb_dark-mode", root: true },
     menuBar: { title: "Menu Bar", icon: "sb_controlcenter.settings", root: true },
-    siri: { title: "Apple Intelligence & Siri", icon: "sb_apple-intelligence", root: true },
+    gemini: { title: "Gemini Intelligence", icon: "sb_apple-intelligence", root: true },
     desktopDock: { title: "Desktop & Dock", icon: "sb_desktop", root: true },
     displays: { title: "Displays", icon: "sb_display", root: true },
     spotlight: { title: "Spotlight", icon: "sb_spotlight", root: true },
@@ -32,10 +31,6 @@ var info = {
     privacySecurity: { title: "Privacy & Security", icon: "sb_privacy", root: true },
     touchIDPassword: { title: "Touch ID & Password", icon: "sb_touch-id", root: true },
     usersGroups: { title: "Users & Groups", icon: "sb_group", root: true },
-    internetAccounts: { title: "Internet Accounts", icon: "sb_accounts", root: true },
-    gameCenter: { title: "Game Center", icon: "sb_gamecenter", root: true },
-    icloud: { title: "iCloud", icon: "sb_icloud", root: true },
-    walletApplePay: { title: "Wallet & Apple Pay", icon: "sb_wallet", root: true },
     keyboard: { title: "Keyboard", icon: "sb_keyboard", root: true },
     trackpad: { title: "Trackpad", icon: "sb_trackpad", root: true },
     printersScanners: { title: "Printers & Scanners", icon: "sb_printer", root: true },
@@ -114,6 +109,8 @@ var info = {
 // Pages with a dedicated QML file (relative to qml/ directory)
 var files = {
     appleId: "pages/SignInPage.qml",
+    gemini: "pages/GeminiPage.qml",
+    screenTime: "pages/ScreenTimePage.qml",
     desktopDock: "pages/DesktopDockPage.qml",
     wallpaper: "pages/WallpaperPage.qml",
     sound: "pages/SoundPage.qml",

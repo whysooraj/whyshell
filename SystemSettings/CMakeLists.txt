@@ -87,6 +87,8 @@ qt_add_qml_module(systemsettings
         qml/pages/SpotlightPage.qml
         qml/pages/DisplaysPage.qml
         qml/pages/LockScreenPage.qml
+        qml/pages/GeminiPage.qml
+        qml/pages/ScreenTimePage.qml
 )
 
 target_link_libraries(systemsettings PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::Multimedia)
