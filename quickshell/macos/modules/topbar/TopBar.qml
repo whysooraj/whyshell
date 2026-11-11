@@ -14,7 +14,11 @@ import "./eqsh" as Eq
 PanelWindow {
     id: root
 
-    screen: Quickshell.screens[0]
+    screen: {
+        var idx = (Appearance.userCfg && typeof Appearance.userCfg.topBarScreen !== "undefined") ? Number(Appearance.userCfg.topBarScreen) : 0;
+        if (idx >= 0 && idx < Quickshell.screens.length) return Quickshell.screens[idx];
+        return Quickshell.screens[0];
+    }
     anchors {
         top: true
         left: true

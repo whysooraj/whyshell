@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell
 import qs.config
-import qs.ui.components.lockscreen
 import "./services"
 import "./modules/topbar"
 import "./modules/spotlight"
@@ -14,6 +13,7 @@ import "./modules/controlcenter"
 import "./modules/desktop"
 import "./modules/settings"
 import "./modules/launcher"
+import "./modules/lock"
 
 ShellRoot {
     id: root
@@ -30,31 +30,7 @@ ShellRoot {
     ForceQuit {}
     ControlCenter {}
     Settings {}
-
-    // eqsh LockScreen (ext-session-lock) replaces the old PanelWindow lock
-    Loader {
-        id: lockLoader
-        active: Config.lockScreen.enable
-        sourceComponent: Lock {
-            id: lockScreen
-            onLock: ShellController.lock()
-            onUnlocking: if (!Config.notch.delayedLockAnim) ShellController.unlock()
-            onUnlock: ShellController.unlock()
-            Component.onCompleted: Runtime.subscribe("lockscreen", () => lockScreen.lockScreen())
-        }
-    }
-
-    Connections {
-        target: ShellController
-        function onLockedChanged() {
-            if (ShellController.locked) {
-                if (!Runtime.locked) Runtime.locked = true;
-                Runtime.run("lockscreen");
-            } else {
-                if (Runtime.locked) Runtime.locked = false;
-            }
-        }
-    }
+    LockScreen {}
 
     // eqsh Spotlight reads Runtime.spotlightOpen; macos uses ShellController.spotlightOpen
     Connections {

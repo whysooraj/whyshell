@@ -11,7 +11,11 @@ PanelWindow {
         id: root
 
     // ── 1. Properties ──
-    screen: Quickshell.screens[0]
+    screen: {
+        var idx = (Appearance.userCfg && typeof Appearance.userCfg.dockScreen !== "undefined") ? Number(Appearance.userCfg.dockScreen) : 0;
+        if (idx >= 0 && idx < Quickshell.screens.length) return Quickshell.screens[idx];
+        return Quickshell.screens[0];
+    }
     anchors {
         bottom: !root.dockVertical
         top: root.dockVertical
@@ -493,7 +497,11 @@ PanelWindow {
     PopupWindow {
         id: nameTip
         parentWindow: root
-        screen: Quickshell.screens[0]
+        screen: {
+        var idx = (Appearance.userCfg && typeof Appearance.userCfg.dockScreen !== "undefined") ? Number(Appearance.userCfg.dockScreen) : 0;
+        if (idx >= 0 && idx < Quickshell.screens.length) return Quickshell.screens[idx];
+        return Quickshell.screens[0];
+    }
         color: "transparent"
         implicitWidth: tipLabel.width + 16
         implicitHeight: 22
@@ -520,7 +528,11 @@ PanelWindow {
     PopupWindow {
         id: slotMenu
         parentWindow: root
-        screen: Quickshell.screens[0]
+        screen: {
+        var idx = (Appearance.userCfg && typeof Appearance.userCfg.dockScreen !== "undefined") ? Number(Appearance.userCfg.dockScreen) : 0;
+        if (idx >= 0 && idx < Quickshell.screens.length) return Quickshell.screens[idx];
+        return Quickshell.screens[0];
+    }
         width: 220
         height: menuCol.implicitHeight + 12
         visible: root.menuOpen

@@ -6,28 +6,16 @@ import Quickshell.Services.Pam
 import "../../services"
 import "../common"
 
-PanelWindow {
+Scope {
     id: root
-
-    screen: Quickshell.screens[0]
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
-    }
-    color: "transparent"
-    visible: ShellController.locked
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.namespace: "macos:lock"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: root.visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     property bool authenticating: false
     property bool failed: false
     property string statusText: ""
     property string password: ""
     property string pendingPassword: ""
+    property var primaryPasswordField: null
+    property real horizontalShakeOffset: 0
 
     // Customizable configuration helpers
     readonly property var lockCfg: (Appearance.userCfg && Appearance.userCfg.lockScreen) ? Appearance.userCfg.lockScreen : ({})
@@ -80,17 +68,31 @@ PanelWindow {
             : Qt.formatTime(new Date(), "h:mm");
     }
 
-    onVisibleChanged: {
-        if (root.visible) {
-            root.password = "";
-            root.pendingPassword = "";
-            root.failed = false;
-            root.statusText = "";
-            root.authenticating = false;
-            passwordBoxContainer.horizontalOffset = 0;
-            Qt.callLater(() => {
-                if (passwordField) passwordField.forceActiveFocus();
-            });
+    SequentialAnimation {
+        id: shakeAnim
+        NumberAnimation { target: root; property: "horizontalShakeOffset"; to: -12; duration: 40; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "horizontalShakeOffset"; to: 12; duration: 40; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "horizontalShakeOffset"; to: -8; duration: 35; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "horizontalShakeOffset"; to: 8; duration: 35; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "horizontalShakeOffset"; to: -4; duration: 30; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "horizontalShakeOffset"; to: 4; duration: 30; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: root; property: "horizontalShakeOffset"; to: 0; duration: 25; easing.type: Easing.InOutQuad }
+    }
+
+    Connections {
+        target: ShellController
+        function onLockedChanged() {
+            if (ShellController.locked) {
+                root.password = "";
+                root.pendingPassword = "";
+                root.failed = false;
+                root.statusText = "";
+                root.authenticating = false;
+                root.horizontalShakeOffset = 0;
+                Qt.callLater(() => {
+                    if (root.primaryPasswordField) root.primaryPasswordField.forceActiveFocus();
+                });
+            }
         }
     }
 
@@ -118,7 +120,7 @@ PanelWindow {
                 root.password = "";
                 root.pendingPassword = "";
                 shakeAnim.restart();
-                if (passwordField) passwordField.forceActiveFocus();
+                if (root.primaryPasswordField) root.primaryPasswordField.forceActiveFocus();
             }
         }
 
@@ -128,327 +130,341 @@ PanelWindow {
             root.password = "";
             root.pendingPassword = "";
             shakeAnim.restart();
-            if (passwordField) passwordField.forceActiveFocus();
+            if (root.primaryPasswordField) root.primaryPasswordField.forceActiveFocus();
         }
     }
 
-    // Wallpaper
-    Image {
-        anchors.fill: parent
-        source: root.wallpaperSource
-        fillMode: Image.PreserveAspectCrop
-        smooth: true
-        mipmap: true
-    }
+    Variants {
+        model: Quickshell.screens
+        delegate: PanelWindow {
+            id: lockWindow
 
-    // Subtle dark vignette/dimming
-    Rectangle {
-        anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, root.dimOpacity)
-    }
+            required property ShellScreen modelData
+            required property int index
 
-    // Dismiss focus / click background handler
-    MouseArea {
-        anchors.fill: parent
-        z: 1
-        onClicked: {
-            if (passwordField) passwordField.forceActiveFocus();
-        }
-    }
+            screen: modelData
+            anchors {
+                top: true
+                bottom: true
+                left: true
+                right: true
+            }
+            color: "transparent"
+            visible: ShellController.locked
+            exclusionMode: ExclusionMode.Ignore
+            WlrLayershell.namespace: "macos:lock"
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.keyboardFocus: (lockWindow.visible && index === 0) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    // Main lock screen content
-    Item {
-        anchors.fill: parent
-        z: 2
+            // Wallpaper image across all monitors
+            Image {
+                anchors.fill: parent
+                source: root.wallpaperSource
+                fillMode: Image.PreserveAspectCrop
+                smooth: true
+                mipmap: true
+            }
 
-        // Top Clock & Date Area
-        Item {
-            id: clockArea
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 56
-            width: Math.max(timeWrapper.width, dateWrapper.width)
-            height: (root.showDate ? dateWrapper.height + 4 : 0) + timeWrapper.height
+            // Dark vignette overlay
+            Rectangle {
+                anchors.fill: parent
+                color: Qt.rgba(0, 0, 0, root.dimOpacity)
+            }
 
-            // Date (macOS style: top center)
+            // Click background handler -> focus password field
+            MouseArea {
+                anchors.fill: parent
+                z: 1
+                onClicked: {
+                    if (root.primaryPasswordField) root.primaryPasswordField.forceActiveFocus();
+                }
+            }
+
+            // Main lock screen content
             Item {
-                id: dateWrapper
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                width: dateText.paintedWidth
-                height: dateText.paintedHeight
-                visible: root.showDate
-
-                // Soft shadow for legibility over vibrant wallpapers
-                Text {
-                    anchors.centerIn: parent
-                    anchors.verticalCenterOffset: 1.5
-                    text: root.displayDate
-                    font {
-                        family: Appearance.fontFamily
-                        pixelSize: 22
-                        weight: Font.DemiBold
-                    }
-                    color: Qt.rgba(0, 0, 0, 0.40)
-                }
-
-                Text {
-                    id: dateText
-                    anchors.centerIn: parent
-                    text: root.displayDate
-                    font {
-                        family: Appearance.fontFamily
-                        pixelSize: 22
-                        weight: Font.DemiBold
-                    }
-                    color: "#ffffff"
-                }
-            }
-
-            // Time (macOS Sonoma / Sequoia bold clock)
-            Item {
-                id: timeWrapper
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: root.showDate ? dateWrapper.bottom : parent.top
-                anchors.topMargin: 4
-                width: timeText.paintedWidth
-                height: timeText.paintedHeight
-
-                // Drop shadow
-                Text {
-                    anchors.centerIn: parent
-                    anchors.verticalCenterOffset: 3
-                    text: root.displayTime
-                    font {
-                        family: Appearance.fontFamily
-                        pixelSize: 104
-                        weight: Font.Bold
-                    }
-                    color: Qt.rgba(0, 0, 0, 0.35)
-                }
-
-                Text {
-                    id: timeText
-                    anchors.centerIn: parent
-                    text: root.displayTime
-                    font {
-                        family: Appearance.fontFamily
-                        pixelSize: 104
-                        weight: Font.Bold
-                    }
-                    color: "#ffffff"
-                }
-            }
-        }
-
-        // User Avatar (compact circle)
-        Item {
-            id: avatarWrapper
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: passwordBoxContainer.top
-            anchors.bottomMargin: 14
-            width: 56
-            height: 56
-
-            // Subtle drop shadow behind avatar
-            Rectangle {
                 anchors.fill: parent
-                anchors.margins: -1
-                radius: width / 2
-                color: Qt.rgba(0, 0, 0, 0.30)
-            }
+                z: 2
 
-            Rectangle {
-                id: avatarCircle
-                anchors.fill: parent
-                radius: width / 2
-                color: Qt.rgba(255, 255, 255, 0.15)
-                border.color: Qt.rgba(255, 255, 255, 0.35)
-                border.width: 1.5
-                clip: true
+                // Top Clock & Date Area (rendered on all monitors)
+                Item {
+                    id: clockArea
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 56
+                    width: Math.max(timeWrapper.width, dateWrapper.width)
+                    height: (root.showDate ? dateWrapper.height + 4 : 0) + timeWrapper.height
 
-                Image {
+                    // Date
+                    Item {
+                        id: dateWrapper
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        width: dateText.paintedWidth
+                        height: dateText.paintedHeight
+                        visible: root.showDate
+
+                        Text {
+                            anchors.centerIn: parent
+                            anchors.verticalCenterOffset: 1.5
+                            text: root.displayDate
+                            font {
+                                family: Appearance.fontFamily
+                                pixelSize: 22
+                                weight: Font.DemiBold
+                            }
+                            color: Qt.rgba(0, 0, 0, 0.40)
+                        }
+
+                        Text {
+                            id: dateText
+                            anchors.centerIn: parent
+                            text: root.displayDate
+                            font {
+                                family: Appearance.fontFamily
+                                pixelSize: 22
+                                weight: Font.DemiBold
+                            }
+                            color: "#ffffff"
+                        }
+                    }
+
+                    // Time (macOS Sonoma / Sequoia bold clock)
+                    Item {
+                        id: timeWrapper
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: root.showDate ? dateWrapper.bottom : parent.top
+                        anchors.topMargin: 4
+                        width: timeText.paintedWidth
+                        height: timeText.paintedHeight
+
+                        Text {
+                            anchors.centerIn: parent
+                            anchors.verticalCenterOffset: 3
+                            text: root.displayTime
+                            font {
+                                family: Appearance.fontFamily
+                                pixelSize: 104
+                                weight: Font.Bold
+                            }
+                            color: Qt.rgba(0, 0, 0, 0.35)
+                        }
+
+                        Text {
+                            id: timeText
+                            anchors.centerIn: parent
+                            text: root.displayTime
+                            font {
+                                family: Appearance.fontFamily
+                                pixelSize: 104
+                                weight: Font.Bold
+                            }
+                            color: "#ffffff"
+                        }
+                    }
+                }
+
+                // Interactive Auth Controls: only on primary monitor (index === 0)
+                Item {
                     anchors.fill: parent
-                    source: root.avatarSource
-                    fillMode: Image.PreserveAspectCrop
-                    smooth: true
-                    mipmap: true
-                    cache: false
-                }
-            }
-        }
+                    visible: index === 0
 
-        // Password pill container
-        Item {
-            id: passwordBoxContainer
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.horizontalCenterOffset: horizontalOffset
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 105
-            width: 204
-            height: 34
+                    // User Avatar
+                    Item {
+                        id: avatarWrapper
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: passwordBoxContainer.top
+                        anchors.bottomMargin: 14
+                        width: 56
+                        height: 56
 
-            property real horizontalOffset: 0
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: -1
+                            radius: width / 2
+                            color: Qt.rgba(0, 0, 0, 0.30)
+                        }
 
-            // Shake animation on error
-            SequentialAnimation {
-                id: shakeAnim
-                NumberAnimation { target: passwordBoxContainer; property: "horizontalOffset"; to: -12; duration: 40; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: passwordBoxContainer; property: "horizontalOffset"; to: 12; duration: 40; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: passwordBoxContainer; property: "horizontalOffset"; to: -8; duration: 35; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: passwordBoxContainer; property: "horizontalOffset"; to: 8; duration: 35; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: passwordBoxContainer; property: "horizontalOffset"; to: -4; duration: 30; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: passwordBoxContainer; property: "horizontalOffset"; to: 4; duration: 30; easing.type: Easing.InOutQuad }
-                NumberAnimation { target: passwordBoxContainer; property: "horizontalOffset"; to: 0; duration: 25; easing.type: Easing.InOutQuad }
-            }
+                        Rectangle {
+                            id: avatarCircle
+                            anchors.fill: parent
+                            radius: width / 2
+                            color: Qt.rgba(255, 255, 255, 0.15)
+                            border.color: Qt.rgba(255, 255, 255, 0.35)
+                            border.width: 1.5
+                            clip: true
 
-            // Frosted glass pill background
-            Rectangle {
-                id: passwordBox
-                anchors.fill: parent
-                radius: 17
-                color: Qt.rgba(255, 255, 255, 0.22)
-                border.color: root.failed ? "#ff5c5c" : Qt.rgba(255, 255, 255, 0.32)
-                border.width: 1
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        if (passwordField) passwordField.forceActiveFocus();
+                            Image {
+                                anchors.fill: parent
+                                source: root.avatarSource
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                mipmap: true
+                                cache: false
+                            }
+                        }
                     }
-                }
 
-                // Placeholder text
-                Text {
-                    anchors.centerIn: parent
-                    visible: passwordField.text.length === 0 && !root.authenticating
-                    text: "Enter Password"
-                    font {
-                        family: Appearance.fontFamily
-                        pixelSize: 13
-                        weight: Font.Normal
+                    // Password pill container
+                    Item {
+                        id: passwordBoxContainer
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.horizontalCenterOffset: root.horizontalShakeOffset
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 105
+                        width: 204
+                        height: 34
+
+                        Rectangle {
+                            id: passwordBox
+                            anchors.fill: parent
+                            radius: 17
+                            color: Qt.rgba(255, 255, 255, 0.22)
+                            border.color: root.failed ? "#ff5c5c" : Qt.rgba(255, 255, 255, 0.32)
+                            border.width: 1
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    if (passwordField) passwordField.forceActiveFocus();
+                                }
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: passwordField.text.length === 0 && !root.authenticating
+                                text: "Enter Password"
+                                font {
+                                    family: Appearance.fontFamily
+                                    pixelSize: 13
+                                    weight: Font.Normal
+                                }
+                                color: Qt.rgba(255, 255, 255, 0.65)
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: root.authenticating
+                                text: "Unlocking\u2026"
+                                font {
+                                    family: Appearance.fontFamily
+                                    pixelSize: 13
+                                    weight: Font.Normal
+                                }
+                                color: Qt.rgba(255, 255, 255, 0.85)
+                            }
+
+                            TextInput {
+                                id: passwordField
+                                anchors.fill: parent
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: (passwordField.text.length > 0) ? 34 : 16
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                                visible: !root.authenticating
+                                focus: lockWindow.visible && index === 0
+                                echoMode: TextInput.Password
+                                passwordCharacter: "\u2022"
+                                font {
+                                    family: Appearance.fontFamily
+                                    pixelSize: 15
+                                    letterSpacing: 2
+                                }
+                                color: "#ffffff"
+                                selectionColor: Appearance.accent
+                                text: root.password
+                                onTextChanged: {
+                                    root.password = text;
+                                    if (root.failed) root.failed = false;
+                                    if (root.statusText !== "") root.statusText = "";
+                                }
+                                onAccepted: root.authenticate()
+
+                                Component.onCompleted: {
+                                    root.primaryPasswordField = passwordField;
+                                }
+                            }
+
+                            // Submit arrow button
+                            Rectangle {
+                                id: submitBtn
+                                anchors.right: parent.right
+                                anchors.rightMargin: 5
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 24
+                                height: 24
+                                radius: 12
+                                visible: passwordField.text.length > 0 && !root.authenticating
+                                color: submitMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.50) : Qt.rgba(255, 255, 255, 0.30)
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "\u2192"
+                                    font {
+                                        family: Appearance.fontFamily
+                                        pixelSize: 13
+                                        bold: true
+                                    }
+                                    color: "#ffffff"
+                                }
+
+                                MouseArea {
+                                    id: submitMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.authenticate()
+                                }
+                            }
+                        }
                     }
-                    color: Qt.rgba(255, 255, 255, 0.65)
-                }
 
-                // Unlocking state text
-                Text {
-                    anchors.centerIn: parent
-                    visible: root.authenticating
-                    text: "Unlocking\u2026"
-                    font {
-                        family: Appearance.fontFamily
-                        pixelSize: 13
-                        weight: Font.Normal
-                    }
-                    color: Qt.rgba(255, 255, 255, 0.85)
-                }
-
-                TextInput {
-                    id: passwordField
-                    anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: (passwordField.text.length > 0) ? 34 : 16
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    visible: !root.authenticating
-                    focus: root.visible
-                    echoMode: TextInput.Password
-                    passwordCharacter: "\u2022"
-                    font {
-                        family: Appearance.fontFamily
-                        pixelSize: 15
-                        letterSpacing: 2
-                    }
-                    color: "#ffffff"
-                    selectionColor: Appearance.accent
-                    text: root.password
-                    onTextChanged: {
-                        root.password = text;
-                        if (root.failed) root.failed = false;
-                        if (root.statusText !== "") root.statusText = "";
-                    }
-                    onAccepted: root.authenticate()
-                }
-
-                // Submit arrow button (visible when user types)
-                Rectangle {
-                    id: submitBtn
-                    anchors.right: parent.right
-                    anchors.rightMargin: 5
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 24
-                    height: 24
-                    radius: 12
-                    visible: passwordField.text.length > 0 && !root.authenticating
-                    color: submitMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.50) : Qt.rgba(255, 255, 255, 0.30)
-
+                    // Status text
                     Text {
-                        anchors.centerIn: parent
-                        text: "\u2192"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: passwordBoxContainer.bottom
+                        anchors.topMargin: 10
+                        visible: root.statusText !== ""
+                        text: root.statusText
                         font {
                             family: Appearance.fontFamily
-                            pixelSize: 13
-                            bold: true
+                            pixelSize: 12
+                            weight: Font.Normal
                         }
-                        color: "#ffffff"
+                        color: root.failed ? "#ff8080" : Qt.rgba(255, 255, 255, 0.85)
                     }
 
-                    MouseArea {
-                        id: submitMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.authenticate()
+                    // Power button (bottom right)
+                    Rectangle {
+                        id: powerBtn
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.margins: 24
+                        width: 36
+                        height: 36
+                        radius: 18
+                        visible: root.showPowerButton
+                        color: powerMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.28) : Qt.rgba(255, 255, 255, 0.15)
+                        border.color: Qt.rgba(255, 255, 255, 0.25)
+                        border.width: 1
+                        z: 3
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\u23FB"
+                            font { family: Appearance.fontFamily; pixelSize: 16 }
+                            color: "#ffffff"
+                        }
+
+                        MouseArea {
+                            id: powerMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: ShellController.toggle("session")
+                        }
                     }
                 }
             }
-        }
-
-        // Status text / Incorrect password notice
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: passwordBoxContainer.bottom
-            anchors.topMargin: 10
-            visible: root.statusText !== ""
-            text: root.statusText
-            font {
-                family: Appearance.fontFamily
-                pixelSize: 12
-                weight: Font.Normal
-            }
-            color: root.failed ? "#ff8080" : Qt.rgba(255, 255, 255, 0.85)
-        }
-    }
-
-    // Power button (bottom right)
-    Rectangle {
-        id: powerBtn
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: 24
-        width: 36
-        height: 36
-        radius: 18
-        visible: root.showPowerButton
-        color: powerMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.28) : Qt.rgba(255, 255, 255, 0.15)
-        border.color: Qt.rgba(255, 255, 255, 0.25)
-        border.width: 1
-        z: 3
-
-        Text {
-            anchors.centerIn: parent
-            text: "\u23FB"
-            font { family: Appearance.fontFamily; pixelSize: 16 }
-            color: "#ffffff"
-        }
-
-        MouseArea {
-            id: powerMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: ShellController.toggle("session")
         }
     }
 
