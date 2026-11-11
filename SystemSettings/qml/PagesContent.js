@@ -1338,8 +1338,49 @@ content["keyboard"] = [
         { t: "Delay Until Repeat", s: "Delay before a held key starts repeating", sl: true, min: 150, max: 800, step: 25, cfg: "keyboard.repeatDelay", def: 300, fmt: "{v} ms", cmdFmt: "hyprctl keyword input:repeat_delay {v}" }
     ] },
     { header: "Keyboard Layout & Shortcuts", rows: [
+        { t: "Desktop Shortcuts Reference", s: "View all active desktop & window shortcuts", c: true, to: "keyboard.shortcuts" },
         { t: "Layout", v: "us", to: "keyboard.input" },
-        { t: "Hyprland Keybinds Config", s: "~/.config/revo/hypr/configs/keybinds.lua", c: true, cmd: "kitty --title 'Keybinds' -e nvim ~/.config/revo/hypr/configs/keybinds.lua" }
+        { t: "Edit Keybinds Config", s: "~/.config/revo/hypr/configs/keybinds.lua", c: true, cmd: "kitty --title 'Keybinds' -e nvim ~/.config/revo/hypr/configs/keybinds.lua" }
+    ] }
+]
+
+content["keyboard.shortcuts"] = [
+    { header: "Wallpapers", rows: [
+        { t: "Visual Wallpaper Browser", v: "Super + Y", cmd: "bash ~/.config/revo/hypr/scripts/quickshell/toggle_wallpaper_browser.sh" },
+        { t: "Next Random Wallpaper", v: "Super + R", cmd: "bash ~/.config/revo/hypr/scripts/wallpapers/wallpaper-matugen.sh" },
+        { t: "Wallpaper Settings Page", v: "Super + Shift + W", cmd: "systemsettings wallpaper" }
+    ] },
+    { header: "System & Launchers", rows: [
+        { t: "Spotlight Search", v: "Super + Space" },
+        { t: "App Launchpad", v: "Super + A" },
+        { t: "System Settings", v: "Super + I" },
+        { t: "Shortcuts Cheat Sheet", v: "Super + /" },
+        { t: "Lock Screen", v: "Super + L" },
+        { t: "Show Desktop", v: "Super + D" }
+    ] },
+    { header: "Window Management", rows: [
+        { t: "Close Active Window", v: "Super + Q" },
+        { t: "Toggle Floating Window", v: "Super + F" },
+        { t: "Minimize Window", v: "Super + M" },
+        { t: "Restore Minimized Window", v: "Super + Shift + M" },
+        { t: "Move Focus (Directions)", v: "Super + Arrow Keys" }
+    ] },
+    { header: "Workspaces", rows: [
+        { t: "Switch to Workspace 1-10", v: "Super + 1…0" },
+        { t: "Move Window to Workspace 1-10", v: "Super + Shift + 1…0" },
+        { t: "Toggle Previous Workspace", v: "Super + Tab" },
+        { t: "Workspace Swipe Gesture", v: "3 & 4-Finger Touchpad Swipe" }
+    ] },
+    { header: "Applications & Tools", rows: [
+        { t: "Terminal (Kitty)", v: "Super + Return" },
+        { t: "File Manager (Nautilus)", v: "Super + E" },
+        { t: "Web Browser (Zen)", v: "Super + Z" },
+        { t: "Notification Center", v: "Super + Shift + N" }
+    ] },
+    { header: "Screenshots", rows: [
+        { t: "Copy Active Screen Screenshot", v: "Print" },
+        { t: "Select Area Screenshot", v: "Super + Shift + S" },
+        { t: "Screenshot Gallery History", v: "Super + V" }
     ] }
 ]
 

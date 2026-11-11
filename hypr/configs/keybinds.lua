@@ -39,6 +39,9 @@ hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/qs_m
 hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/ryoku_settings.sh"))
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/rofi_show.sh window"))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/wallpapers/wallpaper-matugen.sh"))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("systemsettings wallpaper"))
+hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("systemsettings shortcuts"))
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("swaync-client -t"))
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/quickshell/toggle_wallpaper_engine_browser.sh"))
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/quickshell/toggle_dots_browser.sh"))
 

@@ -14,7 +14,7 @@ ApplicationWindow {
     title: "System Settings"
     color: Theme.windowBg
 
-    property string selectedId: "gen.storage"
+    property string selectedId: "general"
     property bool hasBattery: true
 
     // --test-pages: cycle through every page and print QML errors, then exit
@@ -23,8 +23,25 @@ ApplicationWindow {
     property int testIdx: 0
 
     Component.onCompleted: {
-        if (!testMode)
+        if (!testMode) {
+            var args = Qt.application.arguments
+            for (var a = 1; a < args.length; a++) {
+                var arg = args[a]
+                if (arg.indexOf("--page=") === 0) {
+                    root.selectedId = arg.substring(7)
+                    return
+                }
+                if (arg === "shortcuts") {
+                    root.selectedId = "keyboard.shortcuts"
+                    return
+                }
+                if (Pages.info[arg] || Content.content[arg]) {
+                    root.selectedId = arg
+                    return
+                }
+            }
             return
+        }
         var all = Pages.roots.slice()
         for (var k in Content.content)
             if (all.indexOf(k) < 0)

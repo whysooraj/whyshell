@@ -32,6 +32,7 @@ var info = {
     touchIDPassword: { title: "Touch ID & Password", icon: "sb_touch-id", root: true },
     usersGroups: { title: "Users & Groups", icon: "sb_group", root: true },
     keyboard: { title: "Keyboard", icon: "sb_keyboard", root: true },
+    "keyboard.shortcuts": { title: "Keyboard Shortcuts" },
     trackpad: { title: "Trackpad", icon: "sb_trackpad", root: true },
     printersScanners: { title: "Printers & Scanners", icon: "sb_printer", root: true },
 
