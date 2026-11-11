@@ -16,6 +16,7 @@ Singleton {
     property bool aboutOpen: false
     property bool forceQuitOpen: false
     property bool notificationsOpen: false
+    property bool missionControlOpen: false
     property bool locked: false
     property string pendingConfirm: ""
 
@@ -31,6 +32,7 @@ Singleton {
         if (name === "session") return root.sessionOpen;
         if (name === "forcequit") return root.forceQuitOpen;
         if (name === "notifications") return root.notificationsOpen;
+        if (name === "missioncontrol" || name === "expose") return root.missionControlOpen;
         return false;
     }
 
@@ -41,6 +43,7 @@ Singleton {
         if (except !== "session") root.sessionOpen = false;
         if (except !== "forcequit") root.forceQuitOpen = false;
         if (except !== "notifications") root.notificationsOpen = false;
+        if (except !== "missioncontrol" && except !== "expose") root.missionControlOpen = false;
         root.pendingConfirm = "";
     }
 
@@ -53,6 +56,7 @@ Singleton {
         else if (name === "controlcenter") root.controlCenterOpen = !currentlyOpen;
         else if (name === "session") root.sessionOpen = !currentlyOpen;
         else if (name === "notifications") root.notificationsOpen = !currentlyOpen;
+        else if (name === "missioncontrol" || name === "expose") root.missionControlOpen = !currentlyOpen;
         else if (name === "settings") Apps.launch("systemsettings");
     }
 
@@ -113,6 +117,7 @@ Singleton {
     function action(name) {
         if (name === "lock") { root.lock(); return; }
         if (name === "unlock") { root.unlock(); return; }
+        if (name === "missioncontrol" || name === "expose") { root.toggle("missioncontrol"); return; }
         if (name === "logout") {
             // hyprctl dispatch exit is unavailable on this lua build; end the
             // graphical logind session of the current user instead.
@@ -132,6 +137,7 @@ Singleton {
         if (cmd === "lock") { root.lock(); return; }
         if (cmd === "unlock") { root.unlock(); return; }
         if (cmd === "forcequit") { root.openForceQuit(); return; }
+        if (cmd === "missioncontrol" || cmd === "expose") { root.toggle("missioncontrol"); return; }
         if (cmd === "minimizeActive") {
             const tl = ToplevelManager.activeToplevel;
             console.log("[minimizeActive] tl:", tl, tl ? tl.title : "none");

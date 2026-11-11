@@ -58,6 +58,10 @@ hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
 hl.bind(mainMod .. " + up", hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down", hl.dsp.focus({ direction = "down" }))
 
+-- Mission Control / Exposé
+hl.bind("F3", hl.dsp.exec_cmd("bash -c 'echo missioncontrol > /tmp/macos_cmd'"))
+hl.bind(mainMod .. " + Tab", hl.dsp.exec_cmd("bash -c 'echo missioncontrol > /tmp/macos_cmd'"))
+
 -- Workspaces
 hl.bind(mainMod .. " + 1", hl.dsp.focus({ workspace = 1 }))
 hl.bind(mainMod .. " + 2", hl.dsp.focus({ workspace = 2 }))

@@ -14,6 +14,7 @@ import "./modules/desktop"
 import "./modules/settings"
 import "./modules/launcher"
 import "./modules/lock"
+import "./modules/missioncontrol"
 
 ShellRoot {
     id: root
@@ -31,6 +32,7 @@ ShellRoot {
     ControlCenter {}
     Settings {}
     LockScreen {}
+    MissionControl {}
 
     // eqsh Spotlight reads Runtime.spotlightOpen; macos uses ShellController.spotlightOpen
     Connections {
