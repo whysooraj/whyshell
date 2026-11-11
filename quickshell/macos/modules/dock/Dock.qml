@@ -22,6 +22,21 @@ PanelWindow {
     height: root.dockVertical ? root.capsuleWidth : root.winThick
     width: root.winThick
     exclusiveZone: Appearance.dockAutohide ? 0 : (root.capsuleHeight + 10)
+
+    Item {
+        id: dockInputRegion
+        anchors.bottom: root.dockVertical ? undefined : parent.bottom
+        anchors.top: root.dockVertical ? parent.top : undefined
+        anchors.left: (!root.dockVertical || root.dockLeft) ? parent.left : undefined
+        anchors.right: (!root.dockVertical || !root.dockLeft) ? parent.right : undefined
+        width: root.dockVertical ? (root.capsuleHeight + (rootReveal.hovered ? Math.min(25, root.iconZoomFactor) : 0)) : parent.width
+        height: root.dockVertical ? parent.height : (root.capsuleHeight + (rootReveal.hovered ? Math.min(25, root.iconZoomFactor) : 0))
+    }
+
+    mask: Region {
+        item: dockInputRegion
+    }
+
     property bool isTrashFull: false
 
     // ── 2. Independent Elements ──
@@ -36,7 +51,7 @@ PanelWindow {
 
     Process {
         id: trashOpener
-        command: [Quickshell.env("HOME") + "/.local/bin/nautilus", "trash:///"]
+        command: ["sh", "-c", "nautilus trash:/// 2>/dev/null || thunar trash:/// 2>/dev/null || xdg-open ~/.local/share/Trash/files"]
         running: false
     }
 
@@ -997,7 +1012,8 @@ PanelWindow {
                 required property var modelData
                 required property int index
                 Layout.preferredWidth: root.dockVertical ? parent.width : root.slotWidth
-                Layout.preferredHeight: root.dockVertical ? root.slotWidth : parent.height
+                Layout.preferredHeight: root.dockVertical ? root.slotWidth : root.capsuleHeight
+                Layout.alignment: Qt.AlignBottom
 
                 property real dragXOffset: 0
                 property real shiftOffset: {
@@ -1053,13 +1069,15 @@ PanelWindow {
                 }
 
                 onLaunchingChanged: {
-                    if (launching) {
-                        launchBounce.start();
-                    } else {
-                        launchBounce.stop();
-                        bounceScale = 1.0;
-                        bounceLift = 0.0;
-                    }
+                    bounceScale = 1.0;
+                    bounceLift = 0.0;
+                }
+
+                Timer {
+                    id: launchTimeout
+                    interval: 8000
+                    running: slot.launching
+                    onTriggered: slot.launching = false
                 }
 
                 onIsRunningChanged: {
@@ -1070,60 +1088,8 @@ PanelWindow {
 
                 property bool isRunning: DockApps.isRunning(slot.app.appIds)
 
-                ParallelAnimation {
-                    id: launchBounce
-                    loops: Animation.Infinite
-                    running: false
-                    SequentialAnimation {
-                        NumberAnimation {
-                            target: slot; property: "bounceScale"
-                            to: 1.22; duration: 90; easing.type: Easing.OutQuad
-                        }
-                        NumberAnimation {
-                            target: slot; property: "bounceScale"
-                            to: 1.0; duration: 340; easing.type: Easing.OutBounce
-                        }
-                    }
-                    SequentialAnimation {
-                        NumberAnimation {
-                            target: slot; property: "bounceLift"
-                            to: 12; duration: 90; easing.type: Easing.OutQuad
-                        }
-                        NumberAnimation {
-                            target: slot; property: "bounceLift"
-                            to: 0; duration: 340; easing.type: Easing.OutBounce
-                        }
-                    }
-                }
-
                 function bounce() {
-                    bounceAnim.restart();
-                }
-
-                ParallelAnimation {
-                    id: bounceAnim
-                    running: false
-                    onFinished: { slot.bounceScale = 1.0; slot.bounceLift = 0.0; }
-                    SequentialAnimation {
-                        NumberAnimation {
-                            target: slot; property: "bounceScale"
-                            to: 1.22; duration: 90; easing.type: Easing.OutQuad
-                        }
-                        NumberAnimation {
-                            target: slot; property: "bounceScale"
-                            to: 1.0; duration: 340; easing.type: Easing.OutBounce
-                        }
-                    }
-                    SequentialAnimation {
-                        NumberAnimation {
-                            target: slot; property: "bounceLift"
-                            to: 12; duration: 90; easing.type: Easing.OutQuad
-                        }
-                        NumberAnimation {
-                            target: slot; property: "bounceLift"
-                            to: 0; duration: 340; easing.type: Easing.OutBounce
-                        }
-                    }
+                    // Icon stays still on click, no multiple pops
                 }
 
                 Rectangle {
@@ -1201,6 +1167,56 @@ PanelWindow {
                         }
                         color: "#ffffff"
                         font { family: Appearance.fontFamily; pixelSize: 11; weight: Font.Bold }
+                    }
+                }
+
+                Item {
+                    id: launchSpinner
+                    anchors.centerIn: icon
+                    width: 26
+                    height: 26
+                    visible: slot.launching
+                    z: 5
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 13
+                        color: Qt.rgba(0, 0, 0, 0.45)
+                        border.color: Qt.rgba(255, 255, 255, 0.15)
+                        border.width: 1
+                    }
+
+                    Canvas {
+                        id: spinnerCanvas
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.clearRect(0, 0, width, height);
+                            var c = width / 2;
+                            var r = c - 2;
+
+                            ctx.beginPath();
+                            ctx.arc(c, c, r, 0, 2 * Math.PI, false);
+                            ctx.lineWidth = 2.2;
+                            ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+                            ctx.stroke();
+
+                            ctx.beginPath();
+                            ctx.arc(c, c, r, -Math.PI / 2, Math.PI / 3, false);
+                            ctx.lineWidth = 2.2;
+                            ctx.lineCap = "round";
+                            ctx.strokeStyle = "#ffffff";
+                            ctx.stroke();
+                        }
+
+                        RotationAnimator on rotation {
+                            from: 0
+                            to: 360
+                            duration: 800
+                            loops: Animation.Infinite
+                            running: slot.launching
+                        }
                     }
                 }
 
@@ -1576,7 +1592,10 @@ PanelWindow {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        if (!trashOpener.running) trashOpener.running = true;
+                        if (trashOpener.running) {
+                            trashOpener.running = false;
+                        }
+                        trashOpener.running = true;
                     }
                 }
             } // End trash Item

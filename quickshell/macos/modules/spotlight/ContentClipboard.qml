@@ -1,1 +1,1 @@
-../../eqsh/modules/spotlight/ContentClipboard.qml
+../../../eqsh/modules/spotlight/ContentClipboard.qml

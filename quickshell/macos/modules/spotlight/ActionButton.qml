@@ -1,1 +1,1 @@
-../../eqsh/modules/spotlight/ActionButton.qml
+../../../eqsh/modules/spotlight/ActionButton.qml

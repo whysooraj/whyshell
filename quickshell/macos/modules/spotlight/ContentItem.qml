@@ -1,1 +1,1 @@
-../../eqsh/modules/spotlight/ContentItem.qml
+../../../eqsh/modules/spotlight/ContentItem.qml

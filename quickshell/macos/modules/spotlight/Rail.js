@@ -1,1 +1,1 @@
-../../eqsh/modules/spotlight/Rail.js
+../../../eqsh/modules/spotlight/Rail.js
