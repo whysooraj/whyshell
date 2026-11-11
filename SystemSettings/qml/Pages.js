@@ -36,14 +36,12 @@ var info = {
     trackpad: { title: "Trackpad", icon: "sb_trackpad", root: true },
     printersScanners: { title: "Printers & Scanners", icon: "sb_printer", root: true },
 
-    // Apple Account sub-pages
+    // Apple Account / User sub-pages
     "acct.personalInfo": { title: "Personal Information" },
     "acct.security": { title: "Sign-In & Security" },
-    "acct.payment": { title: "Payment & Shipping" },
+    "acct.sshKeys": { title: "SSH Keys" },
+    "acct.gitIdentity": { title: "Git Identity" },
     "acct.media": { title: "Media & Purchases" },
-    "acct.family": { title: "Family" },
-    "acct.findMy": { title: "Find My" },
-    "acct.signinWithApple": { title: "Sign in with Apple" },
     "acct.deviceDetails": { title: "Mac Pro" },
 
     // General sub-pages
@@ -127,6 +125,12 @@ var files = {
     "gen.storage.macos": "pages/StorageDetail.qml",
     "gen.storage.systemData": "pages/StorageDetail.qml",
     "gen.storage.bins": "pages/StorageDetail.qml",
+    "gen.softwareUpdate": "pages/SoftwareUpdatePage.qml",
+    "gen.dateAndTime": "pages/DateTimePage.qml",
+    "gen.loginItems": "pages/LoginItemsPage.qml",
+    touchIDPassword: "pages/TouchIdPage.qml",
+    "acct.sshKeys": "pages/SSHKeysPage.qml",
+    "acct.gitIdentity": "pages/GitIdentityPage.qml",
     "acc.hoverText": "pages/HoverTextPage.qml",
     "acc.motion": "pages/MotionPage.qml",
     "acct.deviceDetails": "pages/DeviceDetailsPage.qml",

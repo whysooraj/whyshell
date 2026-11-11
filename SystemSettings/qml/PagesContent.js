@@ -40,71 +40,25 @@ var content = {
     "acct.security.recovery": [ { rows: [ { t: "Add Recovery Contact…", cmd: "sh -c 'notify-send \"Recovery Contact\" \"Open iCloud.com to add a recovery contact.\"'" } ] } ],
     "acct.security.recoveryKey": [ { rows: [ { t: "Create Recovery Key…", cmd: "sh -c 'head -c 16 /dev/urandom | base64 | xclip -selection clipboard && notify-send \"Recovery Key\" \"A 16-byte recovery key was copied to the clipboard.\"'" } ] } ],
 
-    "acct.payment": [
+    "acct.sshKeys": [
         { rows: [
-            { t: "Payment Methods", to: "acct.payment.methods" },
-            { t: "Shipping Address", to: "acct.payment.shipping" }
-        ] },
-        { header: "Subscriptions", rows: [
-            { t: "Manage Subscriptions", to: "acct.payment.subs" }
-        ] },
-        { header: "Orders", rows: [
-            { t: "View Purchase History", to: "acct.payment.orders" }
+            { t: "SSH Keys", s: "Public keys in ~/.ssh for Git and servers", to: "acct.sshKeys" },
+            { t: "Generate Ed25519 Key…", c: true, cmd: "kitty --title 'Generate SSH Key' -e ssh-keygen -t ed25519" }
         ] }
     ],
-    "acct.payment.methods": [ { rows: [ { t: "Add Payment Method…", cmd: "sh -c 'notify-send \"Wallet\" \"Add a card in System Settings > Wallet & Apple Pay.\"'" } ] } ],
-    "acct.payment.shipping": [ { rows: [ { t: "Name", v: "{name}" }, { t: "Street", v: "Add Address" } ] } ],
-    "acct.payment.subs": [ { rows: [ { t: "No Active Subscriptions", dim: true } ] } ],
-    "acct.payment.orders": [ { rows: [ { t: "No Past Orders", dim: true } ] } ],
+
+    "acct.gitIdentity": [
+        { rows: [
+            { t: "Git Identity", s: "Author user.name and user.email", to: "acct.gitIdentity" },
+            { t: "View Git Config…", c: true, cmd: "kitty --title 'Git Config' -e git config --list --show-origin" }
+        ] }
+    ],
 
     "acct.media": [
-        { rows: [
-            { t: "Subscriptions", to: "acct.payment.subs" },
-            { t: "Purchase History", to: "acct.payment.orders" }
-        ] },
         { header: "Apps & Media", rows: [
             { t: "Automatic Downloads", ecfg: "media.autoDownloads", def: true, sw: true },
             { t: "Offload Unused Apps", ecfg: "media.offload", def: true, sw: true }
         ] }
-    ],
-
-    "acct.family": [
-        { rows: [
-            { t: "Family", s: "Share subscriptions, iCloud+, and more with up to five people.", to: "acct.family.members" }
-        ] },
-        { header: "Family Sharing", rows: [
-            { t: "Location Sharing", ecfg: "family.locationSharing", def: true, sw: true },
-            { t: "Ask to Buy", ecfg: "family.askToBuy", def: true, sw: true },
-            { t: "Screen Time", ecfg: "family.screenTime", def: false, sw: true }
-        ] },
-        { header: "Shared", rows: [
-            { t: "iCloud+", to: "icloud" },
-            { t: "Subscriptions", to: "acct.payment.subs" },
-            { t: "Purchase Sharing", ecfg: "family.purchaseSharing", def: true, sw: true }
-        ] }
-    ],
-    "acct.family.members": [ { rows: [ { t: "{name}", s: "You (Organizer)" }, { t: "Add Member…" } ] } ],
-
-    "acct.findMy": [
-        { rows: [
-            { t: "Find My Mac", ecfg: "findmy.mac", def: true, sw: true },
-            { t: "Find My Network", ecfg: "findmy.network", def: true, sw: true }
-        ] },
-        { header: "Location Sharing", rows: [
-            { t: "Share My Location", ecfg: "findmy.shareLocation", def: true, sw: true },
-            { t: "From", v: "This Mac" }
-        ] },
-        { header: "Devices", rows: [
-            { t: "This Mac", s: "Online", to: "acct.deviceDetails" }
-        ] }
-    ],
-
-    "acct.signinWithApple": [
-        { rows: [
-            { t: "Apps Using Sign in with Apple", dim: true },
-            { t: "No Apps", dim: true }
-        ] },
-        { note: "Sign in with Apple lets you sign in to apps and websites using your Apple Account." }
     ],
 
     "acct.deviceDetails": [
@@ -154,22 +108,15 @@ var content = {
 
     "gen.softwareUpdate": [
         { rows: [
-            { t: "Automatic Updates", to: "gen.softwareUpdate.auto" },
-            { t: "Check for Updates", c: true },
-            { t: "Update Now", c: true },
-            { t: "Upgrade Now", c: true }
+            { t: "Update Now", s: "Run system upgrade in terminal (paru / yay / pacman)", c: true, cmd: "kitty -e sh -c 'paru || yay || sudo pacman -Syu'" },
+            { t: "Automatic Updates", to: "gen.softwareUpdate.auto" }
         ] },
-        { note: "macOS Tahoe 26.1 is available. Your Mac is up to date." }
+        { note: "System updates keep your kernel and installed packages current." }
     ],
     "gen.softwareUpdate.auto": [
         { header: "Automatically", rows: [
-            { t: "Check for updates", sw: true, on: true },
-            { t: "Download new updates when available", sw: true, on: true },
-            { t: "Install macOS updates", sw: true, on: true },
-            { t: "Install application updates from the App Store", sw: true, on: true },
-            { t: "Install Security Responses and system files", sw: true, on: true }
-        ] },
-        { note: "Updates require your Mac to be connected to power." }
+            { t: "Check for updates", cfg: "autoCheckUpdates", def: true, sw: true }
+        ] }
     ],
 
     "gen.storage": [
@@ -223,10 +170,9 @@ var content = {
 
     "gen.dateAndTime": [
         { rows: [
-            { t: "Set date and time automatically", sw: true, on: true },
-            { t: "Date & Time", v: "Today, 21:30" },
-            { t: "Time zone", v: "Automatic", sw: true, on: true },
-            { t: "Closest City", v: "Riyadh" }
+            { t: "Set date and time automatically", sw: true, cmdFmt: "timedatectl set-ntp {v}" },
+            { t: "Time zone", to: "gen.dateAndTime" },
+            { t: "24-Hour Time", cfg: "clock24h", def: false, sw: true }
         ] }
     ],
 
@@ -244,17 +190,7 @@ var content = {
 
     "gen.loginItems": [
         { header: "Open at Login", rows: [
-            { t: "None", dim: true }
-        ] },
-        { header: "Allow in the Background", note: "These items will be allowed to run in the background.", rows: [
-            { t: "Cloud", sw: true, on: true },
-            { t: "Software Update", sw: true, on: true },
-            { t: "Spotlight", sw: true, on: true }
-        ] },
-        { header: "Extensions", rows: [
-            { t: "Added Extensions", c: true },
-            { t: "Sharing", c: true },
-            { t: "Photos", c: true }
+            { t: "Autostart Applications", s: "Configured in ~/.config/autostart", to: "gen.loginItems" }
         ] }
     ],
 
@@ -450,7 +386,7 @@ var content = {
             { t: "Location Services", sw: true, on: true },
             { t: "Safari", sw: true, on: true },
             { t: "Maps", sw: true, on: true },
-            { t: "Find My", sw: true, on: true, to: "acct.findMy" },
+            { t: "Find My", sw: true, on: true },
             { t: "System Services", c: true }
         ] },
         { note: "Location Services uses your location to improve features such as Maps and Siri." }
@@ -697,7 +633,7 @@ var content = {
             { t: "Mail", sw: true, on: false },
             { t: "Notes", sw: true, on: true },
             { t: "Passwords", sw: true, on: true },
-            { t: "Find My Mac", sw: true, on: true, to: "acct.findMy" }
+            { t: "Find My Mac", sw: true, on: true }
         ] }
     ],
     "icloud.privateRelay": [ { rows: [ { t: "iCloud Private Relay", sw: true, on: true }, { t: "IP Address Location", v: "Country & Time Zone" } ] } ],
@@ -777,11 +713,8 @@ var titles = {
     "acct.security.passkeys": "Passkeys",
     "acct.security.recovery": "Recovery Contacts",
     "acct.security.recoveryKey": "Recovery Key",
-    "acct.payment.methods": "Payment Methods",
-    "acct.payment.shipping": "Shipping Address",
-    "acct.payment.subs": "Subscriptions",
-    "acct.payment.orders": "Purchase History",
-    "acct.family.members": "Family Members",
+    "acct.sshKeys": "SSH Keys",
+    "acct.gitIdentity": "Git Identity",
     "gen.about.name": "Computer Name",
     "gen.about.version": "macOS Version",
     "gen.softwareUpdate.auto": "Automatic Updates",
@@ -1221,19 +1154,15 @@ content["privacy.filevault"] = [
 
 content["touchIDPassword"] = [
     { rows: [
-        { t: "Touch ID & Password", sw: true, on: true, to: "touchID.fingerprint" },
-        { t: "Add Fingerprint…", c: true, to: "touchID.fingerprint" },
-        { t: "iPhone & Apple Watch", v: "None", c: true }
+        { t: "Fingerprint Reader", s: "Biometric authentication via fprintd", to: "touchIDPassword" },
+        { t: "Add Fingerprint…", c: true, cmd: "kitty --title 'Enroll Fingerprint' -e fprintd-enroll" }
     ] },
     { header: "Password", rows: [
-        { t: "Change Password…", c: true, to: "touchID.password" },
-        { t: "Use Touch ID to unlock", sw: true, on: true },
-        { t: "Use Touch ID for Apple Pay", sw: true, on: true },
-        { t: "Use Touch ID to unlock your Mac", sw: true, on: true }
+        { t: "Change Password…", subtitle: "Change UNIX login password", c: true, cmd: "kitty --title 'Change Password' -e passwd" },
+        { t: "Use Fingerprint for PAM authentication", cfg: "auth.useFingerprint", def: true, sw: true }
     ] },
     { header: "Options", rows: [
-        { t: "Automatically log out after inactivity", sw: false, on: false },
-        { t: "Require password immediately", sw: true, on: true }
+        { t: "Require password after sleep", cfg: "lockScreen.requirePassword", def: true, sw: true }
     ] }
 ]
 
@@ -1298,7 +1227,7 @@ content["icloud"] = [
         { t: "Safari", sw: true, on: true },
         { t: "Passwords", sw: true, on: true },
         { t: "Voice Memos", sw: true, on: true },
-        { t: "Find My Mac", sw: true, on: true, to: "acct.findMy" }
+        { t: "Find My Mac", sw: true, on: true }
     ] },
     { header: "iCloud+", rows: [
         { t: "iCloud Private Relay", sw: true, on: true, to: "icloud.privateRelay" },
@@ -1326,8 +1255,8 @@ content["walletApplePay"] = [
         { t: "Allow payments on the web", sw: true, on: true }
     ] },
     { header: "Shipping & Billing", rows: [
-        { t: "Shipping Addresses", c: true, to: "acct.payment.shipping" },
-        { t: "Payment Cards", c: true, to: "acct.payment.methods" }
+        { t: "Shipping Addresses", c: true },
+        { t: "Payment Cards", c: true }
     ] },
     { note: "Wallet lets you keep cards, tickets, and keys in one place." }
 ]

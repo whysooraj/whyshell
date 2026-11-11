@@ -89,6 +89,12 @@ qt_add_qml_module(systemsettings
         qml/pages/LockScreenPage.qml
         qml/pages/GeminiPage.qml
         qml/pages/ScreenTimePage.qml
+        qml/pages/SoftwareUpdatePage.qml
+        qml/pages/DateTimePage.qml
+        qml/pages/LoginItemsPage.qml
+        qml/pages/TouchIdPage.qml
+        qml/pages/SSHKeysPage.qml
+        qml/pages/GitIdentityPage.qml
 )
 
 target_link_libraries(systemsettings PRIVATE Qt6::Quick Qt6::QuickControls2 Qt6::Multimedia)

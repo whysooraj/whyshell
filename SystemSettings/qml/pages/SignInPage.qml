@@ -377,24 +377,33 @@ Column {
         }
 
         SectionHeader {
-            text: "Linked Accounts"
+            text: "Developer Environment"
         }
 
         GroupCard {
             DetailRow {
-                title: "GitHub"
-                subtitle: "Connected via GitHub CLI (whysooraj)"
-                value: "Active"
+                title: "SSH Keys"
+                subtitle: "Public keys in ~/.ssh for Git and remote servers"
+                iconFile: "dt_passkey"
                 chevron: true
-                onClicked: Shell.run("xdg-open https://github.com/whysooraj")
+                onClicked: page.navigate("acct.sshKeys")
             }
             DetailRow {
                 separator: true
-                title: "Git Configuration"
-                subtitle: "View git user.name and user.email"
-                value: page.accountEmail
+                title: "Git Identity"
+                subtitle: "Global author user.name and user.email"
+                iconFile: "dt_personal-info"
+                value: Shell.execOut("git config user.name", 500).trim()
                 chevron: true
-                onClicked: Shell.run("kitty --title 'Git Config' -e git config --list --show-origin")
+                onClicked: page.navigate("acct.gitIdentity")
+            }
+            DetailRow {
+                separator: true
+                title: "GitHub"
+                subtitle: "Connected profile (@whysooraj)"
+                value: "Active"
+                chevron: true
+                onClicked: Shell.run("xdg-open https://github.com/whysooraj")
             }
         }
 

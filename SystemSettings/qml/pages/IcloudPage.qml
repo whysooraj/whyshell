@@ -168,8 +168,6 @@ Column {
             showSwitch: true
             switchOn: Shell.eget("findmy.mac", true) === true
             onToggled: (c) => { Shell.eset("findmy.mac", c); rev++ }
-            chevron: true
-            onClicked: page.navigate("acct.findMy")
         }
         DetailRow {
             separator: true
