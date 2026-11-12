@@ -82,13 +82,13 @@ Rectangle {
     Rectangle {
         id: searchField
         anchors.top: parent.top
-        anchors.topMargin: 25
+        anchors.topMargin: 20
         anchors.left: parent.left
-        anchors.leftMargin: 12
+        anchors.leftMargin: 10
         anchors.right: parent.right
-        anchors.rightMargin: 12
-        height: 22
-        radius: 6
+        anchors.rightMargin: 10
+        height: 28
+        radius: 7
         color: Theme.searchBg
 
         Canvas {
@@ -96,7 +96,7 @@ Rectangle {
             width: 13
             height: 13
             anchors.left: parent.left
-            anchors.leftMargin: 7
+            anchors.leftMargin: 8
             anchors.verticalCenter: parent.verticalCenter
 
             onPaint: {
@@ -119,7 +119,7 @@ Rectangle {
         TextInput {
             id: searchInput
             anchors.left: magnifier.right
-            anchors.leftMargin: 5
+            anchors.leftMargin: 6
             anchors.right: parent.right
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
@@ -143,7 +143,7 @@ Rectangle {
     Flickable {
         id: flick
         anchors.top: searchField.bottom
-        anchors.topMargin: 25
+        anchors.topMargin: 16
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom

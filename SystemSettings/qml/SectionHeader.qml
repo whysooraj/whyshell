@@ -16,15 +16,15 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         text: header.text + header.suffix
         font.family: Theme.fontText
-        font.pixelSize: 13
+        font.pixelSize: 12
         font.weight: Font.DemiBold
-        color: Theme.textPrimary
+        color: Theme.textSecondary
     }
 
     MacButton {
         visible: header.buttonLabel.length > 0
         anchors.right: parent.right
-        anchors.rightMargin: 12
+        anchors.rightMargin: 14
         anchors.verticalCenter: parent.verticalCenter
         text: header.buttonLabel
         onClicked: header.buttonClicked()

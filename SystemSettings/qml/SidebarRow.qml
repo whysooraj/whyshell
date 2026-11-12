@@ -20,10 +20,10 @@ Item {
     Rectangle {
         id: highlight
         anchors.fill: parent
-        anchors.leftMargin: 12
-        anchors.rightMargin: 12
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
         radius: 8
-        color: row.selected ? (row.highlighted ? Theme.accent : Theme.selectedBg) : "transparent"
+        color: row.selected ? (row.highlighted ? Theme.accent : Theme.selectedBg) : (mouse.containsMouse ? Qt.rgba(0, 0, 0, 0.05) : "transparent")
 
         Behavior on color {
             ColorAnimation { duration: 60 }
@@ -32,9 +32,11 @@ Item {
 
     Row {
         anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
-        anchors.leftMargin: 16
-        spacing: 7
+        anchors.left: highlight.left
+        anchors.leftMargin: 8
+        anchors.right: highlight.right
+        anchors.rightMargin: 8
+        spacing: 10
 
         Image {
             source: Theme.icon(row.iconFile, Theme.sidebarIconSize)
@@ -51,12 +53,15 @@ Item {
             font.pixelSize: 13
             color: row.highlighted ? "white" : Theme.textPrimary
             anchors.verticalCenter: parent.verticalCenter
+            elide: Text.ElideRight
+            width: parent.width - Theme.sidebarIconSize - parent.spacing
         }
     }
 
     MouseArea {
         id: mouse
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: row.clicked(row.rowId)
     }

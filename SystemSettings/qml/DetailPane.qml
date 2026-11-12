@@ -51,70 +51,86 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: 34
+        height: 48
 
         Rectangle {
             x: 14
             anchors.verticalCenter: parent.verticalCenter
-            width: 46
-            height: 27
-            radius: 8
-            color: backArea.containsMouse && pane.canBack ? Theme.toolbarBtnHover : Theme.toolbarBtn
+            width: 56
+            height: 26
+            radius: 7
+            color: Theme.toolbarBtn
+            border.width: 1
+            border.color: Theme.hairline
 
-            Text {
+            Rectangle {
                 anchors.centerIn: parent
-                text: "‹"
-                font.pixelSize: 24
-                font.weight: Font.Light
-                color: pane.canBack ? Theme.toolbarBtnText : Theme.toolbarBtnTextDisabled
+                width: 1
+                height: 16
+                color: Theme.separator
             }
 
-            MouseArea {
-                id: backArea
-                anchors.fill: parent
-                enabled: pane.canBack
-                cursorShape: Qt.PointingHandCursor
-                hoverEnabled: true
-                onClicked: pane.stackIdx--
+            Item {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 28
+
+                Text {
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: -1
+                    text: "‹"
+                    font.pixelSize: 22
+                    font.weight: Font.Light
+                    color: pane.canBack ? Theme.toolbarBtnText : Theme.toolbarBtnTextDisabled
+                }
+
+                MouseArea {
+                    id: backArea
+                    anchors.fill: parent
+                    enabled: pane.canBack
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+                    onClicked: pane.stackIdx--
+                }
             }
-        }
 
-        Rectangle {
-            x: 58
-            anchors.verticalCenter: parent.verticalCenter
-            width: 46
-            height: 27
-            radius: 8
-            color: fwdArea.containsMouse && pane.canForward ? Theme.toolbarBtnHover : Theme.toolbarBtn
+            Item {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 28
 
-            Text {
-                anchors.centerIn: parent
-                text: "›"
-                font.pixelSize: 24
-                font.weight: Font.Light
-                color: pane.canForward ? Theme.toolbarBtnText : Theme.toolbarBtnTextDisabled
-            }
+                Text {
+                    anchors.centerIn: parent
+                    anchors.verticalCenterOffset: -1
+                    text: "›"
+                    font.pixelSize: 22
+                    font.weight: Font.Light
+                    color: pane.canForward ? Theme.toolbarBtnText : Theme.toolbarBtnTextDisabled
+                }
 
-            MouseArea {
-                id: fwdArea
-                anchors.fill: parent
-                enabled: pane.canForward
-                cursorShape: Qt.PointingHandCursor
-                hoverEnabled: true
-                onClicked: pane.stackIdx++
+                MouseArea {
+                    id: fwdArea
+                    anchors.fill: parent
+                    enabled: pane.canForward
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+                    onClicked: pane.stackIdx++
+                }
             }
         }
 
         Text {
-            x: 114
+            x: 82
             anchors.verticalCenter: parent.verticalCenter
             text: pane.currentTitle
             font.family: Theme.fontText
-            font.pixelSize: 13
+            font.pixelSize: 15
             font.weight: Font.DemiBold
             color: Theme.textPrimary
             elide: Text.ElideRight
-            width: parent.width - 130
+            width: parent.width - 96
         }
     }
 

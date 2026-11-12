@@ -27,13 +27,14 @@ Item {
 
     x: 0
     width: parent ? parent.width : 100
-    height: subtitle.length > 0 ? 62 : Theme.detailRowHeight
+    height: Math.max(Theme.detailRowHeight, col.height + 16)
 
     Rectangle {
         visible: row.separator
         anchors.top: parent.top
-        x: 27
-        width: parent.width - 39
+        x: row.iconFile.length > 0 ? 54 : 14
+        anchors.right: parent.right
+        anchors.rightMargin: 14
         height: 1
         color: Theme.separator
     }
@@ -48,7 +49,7 @@ Item {
     Image {
         id: icon
         visible: row.iconFile.length > 0
-        x: 24
+        x: 14
         anchors.verticalCenter: parent.verticalCenter
         source: Theme.icon(row.iconFile, 24)
         width: 24
@@ -58,10 +59,12 @@ Item {
     }
 
     Column {
+        id: col
         anchors.left: parent.left
-        anchors.leftMargin: row.iconFile.length > 0 ? 57 : 16
+        anchors.leftMargin: row.iconFile.length > 0 ? 54 : 14
+        anchors.right: row.isSlider ? slider.left : (row.showSwitch ? toggle.left : (row.pickerOptions.length > 0 ? picker.left : (row.value.length > 0 ? valText.left : (row.showInfo ? infoDot.left : (row.chevron ? chev.left : parent.right)))))
+        anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
-        width: parent.width - anchors.leftMargin - (row.isSlider ? Math.max(150, parent.width * 0.42) + 34 : (row.pickerOptions.length > 0 ? 130 : 70))
         spacing: 2
 
         Text {
@@ -69,6 +72,8 @@ Item {
             font.family: Theme.fontText
             font.pixelSize: 13
             color: row.dimmed ? Theme.textSecondary : row.titleColor
+            elide: Text.ElideRight
+            width: parent.width
         }
 
         Text {
@@ -83,9 +88,10 @@ Item {
     }
 
     Text {
+        id: valText
         visible: row.value.length > 0 && row.pickerOptions.length === 0 && !row.isSlider
-        anchors.right: parent.right
-        anchors.rightMargin: row.chevron ? 36 : 16
+        anchors.right: row.showInfo ? infoDot.left : (row.chevron ? chev.left : parent.right)
+        anchors.rightMargin: (row.showInfo || row.chevron) ? 8 : 14
         anchors.verticalCenter: parent.verticalCenter
         text: row.value
         font.family: Theme.fontText
@@ -94,9 +100,10 @@ Item {
     }
 
     MacPicker {
+        id: picker
         visible: row.pickerOptions.length > 0
-        anchors.right: parent.right
-        anchors.rightMargin: row.chevron ? 32 : 16
+        anchors.right: row.showInfo ? infoDot.left : (row.chevron ? chev.left : parent.right)
+        anchors.rightMargin: (row.showInfo || row.chevron) ? 8 : 14
         anchors.verticalCenter: parent.verticalCenter
         options: row.pickerOptions
         value: row.value
@@ -105,9 +112,10 @@ Item {
     }
 
     MacSlider {
+        id: slider
         visible: row.isSlider
         anchors.right: parent.right
-        anchors.rightMargin: 16
+        anchors.rightMargin: 14
         anchors.verticalCenter: parent.verticalCenter
         width: Math.max(150, parent.width * 0.42)
         from: 0
@@ -117,18 +125,20 @@ Item {
     }
 
     MacToggle {
+        id: toggle
         visible: row.showSwitch
-        anchors.right: parent.right
-        anchors.rightMargin: row.showInfo ? 34 : (row.chevron ? 32 : 16)
+        anchors.right: row.showInfo ? infoDot.left : (row.chevron ? chev.left : parent.right)
+        anchors.rightMargin: (row.showInfo || row.chevron) ? 8 : 14
         anchors.verticalCenter: parent.verticalCenter
         checked: row.switchOn
         onToggled: (checked) => row.toggled(checked)
     }
 
     InfoDot {
+        id: infoDot
         visible: row.showInfo
-        anchors.right: parent.right
-        anchors.rightMargin: 12
+        anchors.right: row.chevron ? chev.left : parent.right
+        anchors.rightMargin: row.chevron ? 8 : 14
         anchors.verticalCenter: parent.verticalCenter
         onClicked: row.infoClicked()
     }
@@ -136,7 +146,8 @@ Item {
     Canvas {
         id: chev
         visible: row.chevron
-        x: parent.width - 19
+        anchors.right: parent.right
+        anchors.rightMargin: 14
         anchors.verticalCenter: parent.verticalCenter
         width: 7
         height: 12

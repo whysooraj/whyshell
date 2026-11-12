@@ -16,11 +16,11 @@ QtObject {
     }
 
     // Surfaces
-    readonly property color sidebarBg: dark ? "#212121" : "#FAFAF9"
-    readonly property color windowBg: dark ? "#1E1E1E" : "#FFFFFF"
-    readonly property color cardBg: dark ? "#2C2C2E" : "#F7F7F7"
-    readonly property color separator: dark ? "#3A3A3C" : "#EBEBEB"
-    readonly property color hairline: dark ? "#38383A" : "#E3E3E3"
+    readonly property color sidebarBg: dark ? "#252527" : "#EBEBEF"
+    readonly property color windowBg: dark ? "#1E1E1E" : "#F5F5F7"
+    readonly property color cardBg: dark ? "#2B2B2D" : "#FFFFFF"
+    readonly property color separator: dark ? Qt.rgba(1, 1, 1, 0.09) : Qt.rgba(0, 0, 0, 0.10)
+    readonly property color hairline: dark ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.12)
     readonly property color selectedBg: dark ? "#3A3A3C" : "#D7D7D7"
     readonly property color pressedBg: dark ? "#48484A" : "#CCCCCC"
     readonly property color searchBg: dark ? "#2C2C2E" : "#E6E6E6"
@@ -71,11 +71,11 @@ QtObject {
     readonly property string fontDisplay: "SF Pro Display"
     readonly property string fontRounded: "SF Pro Rounded"
 
-    readonly property int sidebarWidth: 215
+    readonly property int sidebarWidth: 232
     readonly property int detailWidth: 500
-    readonly property int rowHeight: 38
+    readonly property int rowHeight: 36
     readonly property int iconSize: dark ? 24 : 24
-    readonly property int detailRowHeight: 49
+    readonly property int detailRowHeight: 44
     readonly property int cardMargin: 12
     readonly property int cardRadius: 10
 
