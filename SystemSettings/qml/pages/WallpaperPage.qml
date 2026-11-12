@@ -21,6 +21,7 @@ Column {
     function uget(k, d) { bumpU; bumpE; return Shell.uget(k, d) }
 
     width: parent ? parent.width : 640
+    implicitHeight: childrenRect.height
     spacing: 12
 
     // ---------------------------------------------------------------- library
@@ -559,11 +560,17 @@ Column {
         MacButton {
             text: "Add Photo\u2026"
             primary: true
-            onClicked: addPhotoDlg.open()
+            onClicked: {
+                var f = Shell.pickFile("Choose Wallpaper", "Images (*.jpg *.jpeg *.png *.webp *.bmp *.gif *.mp4 *.webm *.mov)")
+                if (f && f.length > 0) page.apply(f)
+            }
         }
         MacButton {
             text: "Add Folder\u2026"
-            onClicked: addFolderDlg.open()
+            onClicked: {
+                var d = Shell.pickFolder("Choose Wallpaper Folder")
+                if (d && d.length > 0) page.addCustomFolder(d)
+            }
         }
     }
 
@@ -576,6 +583,7 @@ Column {
             required property var modelData
             required property int index
             width: page.width
+            implicitHeight: childrenRect.height
             spacing: 8
 
             Item { width: 1; height: 6 }
@@ -587,10 +595,8 @@ Column {
                 suffix: " (" + sec.modelData.files.length + ")"
                 buttonLabel: sec.modelData.add ? "Add Photo\u2026" : ""
                 onButtonClicked: {
-                    if (sec.modelData.dir) {
-                        addPhotoDlg.currentFolder = "file://" + sec.modelData.dir
-                    }
-                    addPhotoDlg.open()
+                    var f = Shell.pickFile("Choose Wallpaper", "Images (*.jpg *.jpeg *.png *.webp *.bmp *.gif *.mp4 *.webm *.mov)")
+                    if (f && f.length > 0) page.apply(f)
                 }
             }
 
@@ -620,115 +626,90 @@ Column {
                     anchors.fill: parent
                     anchors.margins: 12
 
-                    Flickable {
-                        id: flick
+                    ListView {
+                        id: stripList
                         anchors.fill: parent
-                        contentWidth: cells.width
-                        contentHeight: height
+                        orientation: ListView.Horizontal
+                        spacing: 10
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
-                        interactive: cells.width > width
-                        flickableDirection: Flickable.HorizontalFlick
+                        model: sec.modelData.files
+                        reuseItems: true
+                        cacheBuffer: 300
 
-                        Behavior on contentX {
-                            enabled: !flick.moving && !flick.flicking
-                            NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
-                        }
+                        delegate: Item {
+                            id: cell
+                            required property var modelData
+                            width: 148
+                            height: 96
 
-                        Row {
-                            id: cells
-                            spacing: 10
-                            height: parent.height
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 7
+                                color: Theme.dark ? "#1c1c20" : "#f2f3f6"
+                                clip: true
 
-                            Repeater {
-                                model: sec.modelData.files
+                                AnimatedImage {
+                                    anchors.fill: parent
+                                    source: page.isGif(cell.modelData.path) ? "file://" + cell.modelData.path : ""
+                                    fillMode: Image.PreserveAspectCrop
+                                    sourceSize: Qt.size(296, 192)
+                                    asynchronous: true
+                                    visible: status === Image.Ready
+                                }
+                                Image {
+                                    anchors.fill: parent
+                                    source: !page.isGif(cell.modelData.path) && !page.isVideo(cell.modelData.path)
+                                            ? "file://" + cell.modelData.path : ""
+                                    fillMode: Image.PreserveAspectCrop
+                                    sourceSize: Qt.size(296, 192)
+                                    asynchronous: true
+                                    visible: status === Image.Ready
+                                }
 
-                                delegate: Item {
-                                    id: cell
-                                    required property var modelData
-                                    width: 148
-                                    height: 96
-
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        radius: 7
-                                        color: Theme.dark ? "#1c1c20" : "#f2f3f6"
-                                        clip: true
-
-                                        AnimatedImage {
-                                            anchors.fill: parent
-                                            source: page.isGif(cell.modelData.path) ? "file://" + cell.modelData.path : ""
-                                            fillMode: Image.PreserveAspectCrop
-                                            sourceSize: Qt.size(296, 192)
-                                            asynchronous: true
-                                            visible: status === Image.Ready
-                                        }
-                                        Image {
-                                            anchors.fill: parent
-                                            source: !page.isGif(cell.modelData.path) && !page.isVideo(cell.modelData.path)
-                                                    ? "file://" + cell.modelData.path : ""
-                                            fillMode: Image.PreserveAspectCrop
-                                            sourceSize: Qt.size(296, 192)
-                                            asynchronous: true
-                                            visible: status === Image.Ready
-                                        }
-
-                                        Rectangle {
-                                            visible: page.isVideo(cell.modelData.path)
-                                            anchors.centerIn: parent
-                                            width: 26
-                                            height: 26
-                                            radius: 13
-                                            color: Qt.rgba(0, 0, 0, 0.55)
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: "\u25B6"
-                                                color: "white"
-                                                font.pixelSize: 11
-                                            }
-                                        }
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            radius: 7
-                                            color: "transparent"
-                                            border.width: 2
-                                            border.color: page.current === cell.modelData.path
-                                                          ? Theme.accent : "transparent"
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: page.apply(cell.modelData.path)
+                                Rectangle {
+                                    visible: page.isVideo(cell.modelData.path)
+                                    anchors.centerIn: parent
+                                    width: 26
+                                    height: 26
+                                    radius: 13
+                                    color: Qt.rgba(0, 0, 0, 0.55)
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "\u25B6"
+                                        color: "white"
+                                        font.pixelSize: 11
                                     }
                                 }
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: 7
+                                    color: "transparent"
+                                    border.width: 2
+                                    border.color: page.current === cell.modelData.path
+                                                  ? Theme.accent : "transparent"
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: page.apply(cell.modelData.path)
                             }
                         }
                     }
 
                     WheelHandler {
-                        target: flick
+                        target: stripList
                         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                         onWheel: (event) => {
                             var dx = event.angleDelta.x
                             if (dx !== 0) {
-                                flick.contentX = Math.max(0, Math.min(Math.max(0, flick.contentWidth - flick.width), flick.contentX - dx * 1.5))
+                                stripList.contentX = Math.max(0, Math.min(Math.max(0, stripList.contentWidth - stripList.width), stripList.contentX - dx * 1.5))
                                 event.accepted = true
-                                return
-                            }
-                            var dy = event.angleDelta.y
-                            if (dy !== 0 && flick.contentWidth > flick.width) {
-                                var targetX = flick.contentX - dy * 1.5
-                                if (targetX >= 0 && targetX <= (flick.contentWidth - flick.width)) {
-                                    flick.contentX = targetX
-                                    event.accepted = true
-                                } else {
-                                    if (targetX < 0) flick.contentX = 0
-                                    else if (targetX > flick.contentWidth - flick.width) flick.contentX = flick.contentWidth - flick.width
-                                    event.accepted = false
-                                }
+                            } else {
+                                event.accepted = false
                             }
                         }
                     }
@@ -736,7 +717,7 @@ Column {
                     // Left-edge scroll button
                     Rectangle {
                         id: leftBtn
-                        visible: flick.contentWidth > flick.width && flick.contentX > 8
+                        visible: stripList.contentWidth > stripList.width && stripList.contentX > 8
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         width: 28
@@ -757,14 +738,14 @@ Column {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: flick.contentX = Math.max(0, flick.contentX - flick.width * 0.75)
+                            onClicked: stripList.contentX = Math.max(0, stripList.contentX - stripList.width * 0.75)
                         }
                     }
 
                     // Right-edge scroll button
                     Rectangle {
                         id: rightBtn
-                        visible: flick.contentWidth > flick.width && flick.contentX < (flick.contentWidth - flick.width - 8)
+                        visible: stripList.contentWidth > stripList.width && stripList.contentX < (stripList.contentWidth - stripList.width - 8)
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                         width: 28
@@ -785,7 +766,7 @@ Column {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: flick.contentX = Math.min(flick.contentWidth - flick.width, flick.contentX + flick.width * 0.75)
+                            onClicked: stripList.contentX = Math.min(stripList.contentWidth - stripList.width, stripList.contentX + stripList.width * 0.75)
                         }
                     }
                 }

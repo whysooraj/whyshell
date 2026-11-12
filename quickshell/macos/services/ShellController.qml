@@ -147,9 +147,16 @@ Singleton {
         root.action(cmd);
     }
 
+    IpcHandler {
+        target: "shell"
+        function command(cmd: string): void {
+            root.handleCommand(cmd);
+        }
+    }
+
     Timer {
         id: _pollTimer
-        interval: 250
+        interval: 800
         running: true
         repeat: true
         onTriggered: {

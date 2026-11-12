@@ -31,6 +31,8 @@ public:
     Q_INVOKABLE QStringList listFiles(const QString &dir, const QString &exts = QString());
     Q_INVOKABLE QStringList listDirs(const QString &dir);
     Q_INVOKABLE QVariantList listImages(const QString &dir);
+    Q_INVOKABLE QString pickFolder(const QString &title = QString());
+    Q_INVOKABLE QString pickFile(const QString &title = QString(), const QString &filter = QString());
     Q_INVOKABLE QString readFile(const QString &path) const;
     Q_INVOKABLE bool writeFile(const QString &path, const QString &text);
     Q_INVOKABLE bool copyImage(const QString &src, const QString &dst, int maxEdge = 512);

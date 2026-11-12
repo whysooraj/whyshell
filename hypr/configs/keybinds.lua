@@ -33,6 +33,8 @@ hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell -p " .. qs_dir .. "/macos
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("nautilus"))
 hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/quickshell/toggle_wallpaper_browser.sh"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/macos_lock.sh"))
+hl.bind("CTRL + " .. mainMod .. " + Q", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/macos_lock.sh"))
+hl.bind("CTRL + SHIFT + Q", hl.dsp.exec_cmd("bash -c 'echo logout > /tmp/macos_cmd'"))
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("quickshell -p " .. qs_dir .. "/macos/shell.qml ipc call launchpad toggle"))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd("quickshell -p " .. qs_dir .. "/macos/shell.qml ipc call spotlight toggle"))
 hl.bind(mainMod .. " + X", hl.dsp.exec_cmd("bash " .. hypr_dir .. "/scripts/qs_manager.sh toggle music"))

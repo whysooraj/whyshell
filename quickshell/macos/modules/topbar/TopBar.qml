@@ -235,7 +235,7 @@ PanelWindow {
         const tl = ToplevelManager.activeToplevel;
         if (tl && typeof tl.activate === "function") tl.activate();
         const mappedMods = (mods || []).map(m => m === "logo" ? "ctrl" : m);
-        let cmd = "sleep 0.08; wtype";
+        let cmd = "sleep 0.15; wtype";
         for (const m of mappedMods) cmd += " -M " + m;
         cmd += " -k " + key;
         for (const m of mappedMods) cmd += " -m " + m;

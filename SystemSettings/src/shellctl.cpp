@@ -261,6 +261,45 @@ QStringList ShellCtl::listDirs(const QString &dir)
     return out;
 }
 
+QString ShellCtl::pickFolder(const QString &title)
+{
+    QProcess proc;
+    QStringList args = {QStringLiteral("--file-selection"), QStringLiteral("--directory")};
+    if (!title.isEmpty()) args << QStringLiteral("--title") << title;
+    proc.start(QStringLiteral("zenity"), args);
+    if (proc.waitForFinished(120000) && proc.exitCode() == 0) {
+        return QString::fromUtf8(proc.readAllStandardOutput()).trimmed();
+    }
+    QProcess kproc;
+    QStringList kargs = {QStringLiteral("--getexistingdirectory"), QDir::homePath()};
+    if (!title.isEmpty()) kargs << QStringLiteral("--title") << title;
+    kproc.start(QStringLiteral("kdialog"), kargs);
+    if (kproc.waitForFinished(120000) && kproc.exitCode() == 0) {
+        return QString::fromUtf8(kproc.readAllStandardOutput()).trimmed();
+    }
+    return QString();
+}
+
+QString ShellCtl::pickFile(const QString &title, const QString &filter)
+{
+    QProcess proc;
+    QStringList args = {QStringLiteral("--file-selection")};
+    if (!title.isEmpty()) args << QStringLiteral("--title") << title;
+    if (!filter.isEmpty()) args << QStringLiteral("--file-filter") << filter;
+    proc.start(QStringLiteral("zenity"), args);
+    if (proc.waitForFinished(120000) && proc.exitCode() == 0) {
+        return QString::fromUtf8(proc.readAllStandardOutput()).trimmed();
+    }
+    QProcess kproc;
+    QStringList kargs = {QStringLiteral("--getopenfilename"), QDir::homePath()};
+    if (!title.isEmpty()) kargs << QStringLiteral("--title") << title;
+    kproc.start(QStringLiteral("kdialog"), kargs);
+    if (kproc.waitForFinished(120000) && kproc.exitCode() == 0) {
+        return QString::fromUtf8(kproc.readAllStandardOutput()).trimmed();
+    }
+    return QString();
+}
+
 static QString shOut(const QString &cmd, int ms = 2500)
 {
     QProcess p;

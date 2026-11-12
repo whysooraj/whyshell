@@ -23,6 +23,8 @@ Column {
     readonly property double total: SysInfo.totalBytes
     readonly property double used: SysInfo.usedBytes
 
+    Component.onCompleted: SysInfo.refresh()
+
     Item { width: 1; height: 4 }
 
     // Storage bar

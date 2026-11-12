@@ -31,7 +31,7 @@ Item {
 
         Avatar {
             size: 34
-            avatarPath: { var m = Shell.userCfg; return String(Shell.uget("avatarPath", "")) }
+            avatarPath: (typeof Shell !== "undefined" && Shell) ? String(Shell.uget("avatarPath", "")) : ""
             anchors.verticalCenter: parent.verticalCenter
         }
 

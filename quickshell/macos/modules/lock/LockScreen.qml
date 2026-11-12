@@ -433,34 +433,132 @@ Scope {
                         color: root.failed ? "#ff8080" : Qt.rgba(255, 255, 255, 0.85)
                     }
 
-                    // Power button (bottom right)
-                    Rectangle {
-                        id: powerBtn
+                    // Power button & Popover menu (bottom right)
+                    Item {
+                        id: powerArea
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
                         anchors.margins: 24
                         width: 36
                         height: 36
-                        radius: 18
                         visible: root.showPowerButton
-                        color: powerMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.28) : Qt.rgba(255, 255, 255, 0.15)
-                        border.color: Qt.rgba(255, 255, 255, 0.25)
-                        border.width: 1
-                        z: 3
+                        z: 10
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: "\u23FB"
-                            font { family: Appearance.fontFamily; pixelSize: 16 }
-                            color: "#ffffff"
+                        property bool menuOpen: false
+
+                        // Popover menu
+                        Rectangle {
+                            id: powerMenu
+                            visible: powerArea.menuOpen
+                            anchors.bottom: powerBtn.top
+                            anchors.bottomMargin: 8
+                            anchors.right: powerBtn.right
+                            width: 160
+                            height: powerCol.implicitHeight + 8
+                            radius: 10
+                            color: Qt.rgba(0.12, 0.12, 0.14, 0.95)
+                            border.color: Qt.rgba(255, 255, 255, 0.22)
+                            border.width: 1
+                            clip: true
+
+                            Column {
+                                id: powerCol
+                                anchors.fill: parent
+                                anchors.margins: 4
+                                spacing: 2
+
+                                component PowerMenuItem: Rectangle {
+                                    id: pmi
+                                    required property string label
+                                    required property string iconText
+                                    required property var onClicked
+                                    width: parent.width
+                                    height: 30
+                                    radius: 6
+                                    color: pmiMa.containsMouse ? Qt.rgba(255, 255, 255, 0.15) : "transparent"
+
+                                    Row {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 8
+                                        anchors.rightMargin: 8
+                                        spacing: 8
+
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: pmi.iconText
+                                            font.pixelSize: 13
+                                            color: "#ffffff"
+                                        }
+
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: pmi.label
+                                            font { family: Appearance.fontFamily; pixelSize: 13 }
+                                            color: "#ffffff"
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: pmiMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            powerArea.menuOpen = false;
+                                            pmi.onClicked();
+                                        }
+                                    }
+                                }
+
+                                PowerMenuItem {
+                                    label: "Sleep"
+                                    iconText: "🌙"
+                                    onClicked: ShellController.action("sleep")
+                                }
+
+                                PowerMenuItem {
+                                    label: "Restart…"
+                                    iconText: "🔄"
+                                    onClicked: ShellController.action("restart")
+                                }
+
+                                Rectangle {
+                                    width: parent.width - 8
+                                    x: 4
+                                    height: 1
+                                    color: Qt.rgba(255, 255, 255, 0.12)
+                                }
+
+                                PowerMenuItem {
+                                    label: "Shut Down…"
+                                    iconText: "⏻"
+                                    onClicked: ShellController.action("shutdown")
+                                }
+                            }
                         }
 
-                        MouseArea {
-                            id: powerMouse
+                        Rectangle {
+                            id: powerBtn
                             anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: ShellController.toggle("session")
+                            radius: 18
+                            color: powerArea.menuOpen ? Qt.rgba(255, 255, 255, 0.35) : (powerMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.28) : Qt.rgba(255, 255, 255, 0.15))
+                            border.color: Qt.rgba(255, 255, 255, 0.25)
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "\u23FB"
+                                font { family: Appearance.fontFamily; pixelSize: 16 }
+                                color: "#ffffff"
+                            }
+
+                            MouseArea {
+                                id: powerMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: powerArea.menuOpen = !powerArea.menuOpen
+                            }
                         }
                     }
                 }

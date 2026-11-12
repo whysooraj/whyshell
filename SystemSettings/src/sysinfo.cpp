@@ -44,7 +44,14 @@ QVariantList detailSizes(const QList<QPair<QString, QString>> &entries)
 
 } // namespace
 
-SysInfo::SysInfo(QObject *parent) : QObject(parent) {}
+SysInfo::SysInfo(QObject *parent) : QObject(parent)
+{
+    struct statvfs st {};
+    if (statvfs("/", &st) == 0) {
+        m_total = double(st.f_blocks) * double(st.f_frsize);
+        m_used = double(st.f_blocks - st.f_bfree) * double(st.f_frsize);
+    }
+}
 
 void SysInfo::refresh()
 {
