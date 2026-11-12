@@ -49,7 +49,7 @@ Column {
             id: block
             required property var modelData
             width: page.width
-            spacing: 0
+            spacing: 6
 
             SectionHeader {
                 visible: modelData.header !== undefined && modelData.header.length > 0

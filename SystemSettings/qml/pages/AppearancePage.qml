@@ -228,8 +228,7 @@ Column {
 
         Row {
             id: thumbRow
-            x: (parent.width - width) / 2
-            y: 20
+            anchors.horizontalCenter: parent.horizontalCenter
             spacing: 26
 
             Repeater {
@@ -365,8 +364,7 @@ Column {
 
         Row {
             id: accRow
-            x: (parent.width - width) / 2
-            y: 20
+            anchors.horizontalCenter: parent.horizontalCenter
             spacing: 14
 
             Repeater {
@@ -450,8 +448,7 @@ Column {
 
         Row {
             id: hlRow
-            x: (parent.width - width) / 2
-            y: 20
+            anchors.horizontalCenter: parent.horizontalCenter
             spacing: 14
 
             Repeater {

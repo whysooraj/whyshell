@@ -4,6 +4,7 @@ Rectangle {
     id: card
 
     default property alias rows: rowCol.data
+    property alias spacing: rowCol.spacing
 
     x: 12
     width: parent ? parent.width - 24 : 400
@@ -18,5 +19,6 @@ Rectangle {
     Column {
         id: rowCol
         width: parent.width
+        anchors.verticalCenter: parent.verticalCenter
     }
 }
